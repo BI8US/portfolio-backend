@@ -1,5 +1,5 @@
 import prisma from "../prismaClient";
-import { JobApplicationStatus } from "../enums/jobApplicationStatus";
+import { Prisma } from "@prisma/client";
 
 export class JobApplicationRepository {
     async getAll() {
@@ -20,45 +20,19 @@ export class JobApplicationRepository {
         return prisma.jobApplications.findUnique({ where: { id } });
     }
 
-    async create(data: {
-        status: string;
-        company: string;
-        role: string;
-    }) {
+    async create(data: Prisma.jobApplicationsCreateInput) {
         return prisma.jobApplications.create({
-            data: {
-                status: data.status,
-                company: data.company,
-                role: data.role,
-            }
+            data: data
         });
     }
 
     async update(
         id: bigint,
-        data: {
-            status: string;
-            company: string;
-            role: string;
-            link?: string | null;
-            contact?: string | null;
-            schedule?: string | null;
-            description?: string | null;
-            notes?: string | null;
-        }
+        data: Prisma.jobApplicationsUpdateInput
     ) {
         return prisma.jobApplications.update({
             where: { id },
-            data: {
-                status: data.status,
-                company: data.company,
-                role: data.role,
-                link: data.link ?? null,
-                contact: data.contact ?? null,
-                schedule: data.schedule ?? null,
-                description: data.description ?? null,
-                notes: data.notes ?? null,
-            },
+            data: data
         });
     }
 

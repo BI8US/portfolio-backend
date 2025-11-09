@@ -1,5 +1,5 @@
 import prisma from "../prismaClient";
-import type {resumes} from "@prisma/client";
+import type {resumes, Prisma} from "@prisma/client";
 
 export interface DbResumeListItem {
     id: bigint;
@@ -10,6 +10,19 @@ export interface DbResumeListItem {
 }
 
 type ChildListName = "educations" | "projects" | "skills" | "workExperiences" | "mediaLinks";
+
+
+export const fullResumeInclude = {
+    educations: {include: {descriptionPoints: true}},
+    mediaLinks: true,
+    projects: true,
+    skills: true,
+    workExperiences: {include: {descriptionPoints: true}},
+} satisfies Prisma.resumesInclude;
+
+export type FullResume = Prisma.resumesGetPayload<{
+    include: typeof fullResumeInclude;
+}>
 
 export class ResumeRepository {
 
@@ -25,16 +38,10 @@ export class ResumeRepository {
         });
     }
 
-    async getById(id: bigint) {
+    async getById(id: bigint): Promise<FullResume | null> {
         return prisma.resumes.findUnique({
             where: { id },
-            include: {
-                educations: { include: { descriptionPoints: true } },
-                mediaLinks: true,
-                projects: true,
-                skills: true,
-                workExperiences: { include: { descriptionPoints: true } }
-            }
+            include: fullResumeInclude
         });
     }
 
@@ -46,7 +53,7 @@ export class ResumeRepository {
                 fullName: "",
                 email: "",
                 phone: "",
-                picture: null,
+                picture: "/images/avatar.jpg",
                 summary: "",
             }
         });
@@ -60,21 +67,21 @@ export class ResumeRepository {
         return prisma.resumes.delete({ where: { id } });
     }
 
-    async getActiveResume() {
+    async getActiveResume(): Promise<FullResume | null> {
         return prisma.resumes.findFirst({
             where: { isActive: true },
-            include: {
-                educations: { include: { descriptionPoints: true } },
-                mediaLinks: true,
-                projects: true,
-                skills: true,
-                workExperiences: { include: { descriptionPoints: true } }
-            }
+            include: fullResumeInclude
         });
     }
 
     async clearChildList(listName: ChildListName, resumeId: bigint) {
-        const modelMap: Record<ChildListName, any> = {
+        type DeletableModel = {
+            deleteMany: (args: {
+                where: {resumeId: bigint}
+            }) => Promise<Prisma.BatchPayload>;
+        };
+
+        const modelMap: Record<ChildListName, DeletableModel> = {
             educations: prisma.educations,
             projects: prisma.projects,
             skills: prisma.skills,
@@ -84,20 +91,26 @@ export class ResumeRepository {
 
         const model = modelMap[listName];
 
-        return model.deleteMany({ where: { resumeId } });
+        return model.deleteMany({where: {resumeId}});
     }
 
-    async createChildItem(listName: ChildListName, data: any) {
-        const modelMap: Record<ChildListName, any> = {
-            educations: prisma.educations,
-            projects: prisma.projects,
-            skills: prisma.skills,
-            workExperiences: prisma.workExperiences,
-            mediaLinks: prisma.mediaLinks
-        };
+    async createEducationItem(data: Prisma.educationsCreateInput) {
+        return prisma.educations.create({ data });
+    }
 
-        const model = modelMap[listName];
+    async createWorkExperienceItem(data: Prisma.workExperiencesCreateInput) {
+        return prisma.workExperiences.create({ data });
+    }
 
-        return model.create({ data });
+    async createProjectItem(data: Prisma.projectsCreateInput) {
+        return prisma.projects.create({ data });
+    }
+
+    async createSkillItem(data: Prisma.skillsCreateInput) {
+        return prisma.skills.create({ data });
+    }
+
+    async createMediaLinkItem(data: Prisma.mediaLinksCreateInput) {
+        return prisma.mediaLinks.create({ data });
     }
 }

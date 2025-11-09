@@ -1,13 +1,5 @@
 import prisma from "../prismaClient";
-
-export interface CreateUserData {
-    userName: string;
-    email: string;
-    password: string;
-    role: string;
-    isActive: boolean;
-    createdAt: Date;
-}
+import {Prisma} from "@prisma/client";
 
 export class UserRepository {
     async findByUserName(userName: string) {
@@ -26,7 +18,7 @@ export class UserRepository {
         });
     }
 
-    async createUser(data: CreateUserData) {
+    async createUser(data: Prisma.usersCreateInput) {
         return prisma.users.create({ data });
     }
 }

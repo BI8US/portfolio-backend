@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -19,101 +19,106 @@ model users {
 }
 
 model resumes {
-  id             BigInt    @id @default(autoincrement())
-  resumeName     String    @map("resume_name")
-  isActive       Boolean   @map("is_active") @default(false)
-  fullName       String?   @map("full_name")
-  email          String?
-  phone          String?
-  picture        String?
-  summary        String?   @db.VarChar(1000)
-  createdAt      DateTime  @map("created_at") @db.Timestamp(6) @default(now())
-  updatedAt      DateTime  @map("updated_at") @db.Timestamp(6) @default(now())
+  id         BigInt   @id @default(autoincrement())
+  resumeName String   @map("resume_name")
+  isActive   Boolean  @default(false) @map("is_active")
+  fullName   String?  @map("full_name")
+  email      String?
+  phone      String?
+  picture    String?
+  summary    String?  @db.VarChar(1000)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
-  educations     educations[]
-  mediaLinks     mediaLinks[]
-  projects       projects[]
-  skills         skills[]
+  educations      educations[]
+  mediaLinks      mediaLinks[]
+  projects        projects[]
+  skills          skills[]
   workExperiences workExperiences[]
 }
 
 model educations {
-  id               BigInt   @id @default(autoincrement())
-  school           String?
-  educationName    String?  @map("education_name")
-  startDate        String?  @map("start_date")
-  endDate          String?  @map("end_date")
-  resumeId         BigInt   @map("resume_id")
-  resume           resumes  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  id                BigInt                       @id @default(autoincrement())
+  school            String?
+  educationName     String?                      @map("education_name")
+  startDate         String?                      @map("start_date")
+  endDate           String?                      @map("end_date")
+  resumeId          BigInt                       @map("resume_id")
+  resume            resumes                      @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   descriptionPoints educationDescriptionPoints[]
 }
 
 model educationDescriptionPoints {
-  id                 BigInt     @id @default(autoincrement())
-  educationEntityId  BigInt     @map("education_entity_id")
-  descriptionPoint   String?    @map("description_point")
-  education          educations @relation(fields: [educationEntityId], references: [id], onDelete: Cascade)
+  id                BigInt     @id @default(autoincrement())
+  educationEntityId BigInt     @map("education_entity_id")
+  descriptionPoint  String?    @map("description_point")
+  education         educations @relation(fields: [educationEntityId], references: [id], onDelete: Cascade)
+
   @@map("education_description_points")
 }
 
 model workExperiences {
-  id             BigInt   @id @default(autoincrement())
-  company        String?
-  position       String?
-  startDate      String?  @map("start_date")
-  endDate        String?  @map("end_date")
-  resumeId       BigInt   @map("resume_id")
-  resume         resumes  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  id                BigInt                            @id @default(autoincrement())
+  company           String?
+  position          String?
+  startDate         String?                           @map("start_date")
+  endDate           String?                           @map("end_date")
+  resumeId          BigInt                            @map("resume_id")
+  resume            resumes                           @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   descriptionPoints workExperienceDescriptionPoints[]
+
   @@map("work_experiences")
 }
 
 model workExperienceDescriptionPoints {
-  id                        BigInt          @id @default(autoincrement())
-  workExperienceEntityId    BigInt          @map("work_experience_entity_id")
-  descriptionPoint          String?         @map("description_point")
-  workExperience            workExperiences @relation(fields: [workExperienceEntityId], references: [id], onDelete: Cascade)
+  id                     BigInt          @id @default(autoincrement())
+  workExperienceEntityId BigInt          @map("work_experience_entity_id")
+  descriptionPoint       String?         @map("description_point")
+  workExperience         workExperiences @relation(fields: [workExperienceEntityId], references: [id], onDelete: Cascade)
+
   @@map("work_experience_description_points")
 }
 
 model projects {
-  id          BigInt   @id @default(autoincrement())
+  id          BigInt  @id @default(autoincrement())
   title       String?
-  subTitle    String?  @map("sub_title")
+  subTitle    String? @map("sub_title")
   description String?
   media       String?
-  resumeId    BigInt   @map("resume_id")
-  resume      resumes  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  resumeId    BigInt  @map("resume_id")
+  resume      resumes @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 }
 
 model mediaLinks {
-  id        BigInt   @id @default(autoincrement())
-  name      String?
-  link      String?
-  resumeId  BigInt   @map("resume_id")
-  resume    resumes  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  id       BigInt  @id @default(autoincrement())
+  name     String?
+  link     String?
+  resumeId BigInt  @map("resume_id")
+  resume   resumes @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
   @@map("media_links")
 }
 
 model skills {
-  id          BigInt   @id @default(autoincrement())
-  name        String?
-  skillGroup  String?  @map("skill_group")
-  resumeId    BigInt   @map("resume_id")
-  resume      resumes  @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  id         BigInt  @id @default(autoincrement())
+  name       String?
+  skillGroup String? @map("skill_group")
+  resumeId   BigInt  @map("resume_id")
+  resume     resumes @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 }
 
 model jobApplications {
-  id          BigInt    @id @default(autoincrement())
+  id          BigInt   @id @default(autoincrement())
   link        String?
   contact     String?
   status      String
   company     String
   role        String
   schedule    String?
-  description String?   @db.Text
-  notes       String?   @db.Text
-  createdAt   DateTime  @map("created_at") @db.Timestamp(6) @default(now())
-  updatedAt   DateTime? @map("updated_at") @db.Timestamp(6) @default(now())
+  description String?  @db.Text
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
+
   @@map("job_applications")
 }

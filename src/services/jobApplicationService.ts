@@ -1,21 +1,32 @@
 import { JobApplicationRepository } from "../repositories/jobApplicationRepository";
+import { jobApplications, Prisma } from "@prisma/client";
 import { JobApplicationStatus } from "../enums/jobApplicationStatus";
-import {ApplicationResponse, UpdateApplicationRequest} from "../controllers/jobApplicationController";
+import {ApplicationResponse} from "../controllers/jobApplicationController";
+import { CreateApplicationDto, UpdateApplicationDto } from "../schemas/jobApplication.schema";
 
-function mapApplication(app: any): ApplicationResponse {
+function mapToResponse(app: jobApplications): ApplicationResponse {
     return {
         id: app.id.toString(),
-        status: app.status ?? "",
-        company: app.company ?? "",
-        role: app.role ?? "",
-        link: app.link ?? undefined,
-        contact: app.contact ?? undefined,
-        schedule: app.schedule ?? undefined,
-        description: app.description ?? undefined,
-        notes: app.notes ?? undefined,
+        status: app.status,
+        company: app.company,
+        role: app.role,
         createdAt: app.createdAt.toISOString(),
-        updatedAt: app.updatedAt?.toISOString() ?? "",
+        updatedAt: app.updatedAt.toISOString(),
+        ...(app.link && { link: app.link }),
+        ...(app.contact && { contact: app.contact }),
+        ...(app.schedule && { schedule: app.schedule }),
+        ...(app.description && { description: app.description }),
+        ...(app.notes && { notes: app.notes }),
     };
+}
+
+function cleanData<T extends CreateApplicationDto | UpdateApplicationDto>(data: T): Prisma.jobApplicationsUpdateInput {
+    (Object.keys(data) as Array<keyof T>).forEach(key => {
+        if (data[key] === undefined) {
+            delete data[key];
+        }
+    });
+    return data as Prisma.jobApplicationsUpdateInput;
 }
 
 const repo = new JobApplicationRepository();
@@ -23,47 +34,38 @@ const repo = new JobApplicationRepository();
 export class JobApplicationService {
     async getAll() {
         const apps = await repo.getAll();
-        return apps.map(mapApplication);
+        return apps.map(app => ({
+            id: app.id.toString(),
+            status: app.status,
+            company: app.company,
+            role: app.role,
+            createdAt: app.createdAt.toISOString(),
+            updatedAt: app.updatedAt.toISOString()
+        }));
     }
 
     async getById(id: bigint) {
         const app = await repo.getById(id);
         if (!app) throw new Error("Job application not found");
-        return mapApplication(app);
+        return mapToResponse(app);
     }
 
-    async create(data: {
-        status: string;
-        company: string;
-        role: string;
-    }) {
+    async create(data: CreateApplicationDto) {
         if (!Object.values(JobApplicationStatus).includes(data.status as JobApplicationStatus)) {
             throw new Error(`Invalid job application status: ${data.status}`);
         }
-
-        const app = await repo.create({
-            status: data.status as string,
-            company: data.company,
-            role: data.role,
-        });
-        return mapApplication(app);
+        const cleanedData = cleanData(data);
+        const app = await repo.create(cleanedData as Prisma.jobApplicationsCreateInput);
+        return mapToResponse(app);
     }
 
     async update(
         id: bigint,
-        data: UpdateApplicationRequest
+        data: UpdateApplicationDto
     ) {
-        const app = await repo.update(id, {
-            status: data.status as string,
-            company: data.company,
-            role: data.role,
-            link: data.link ?? null,
-            contact: data.contact ?? null,
-            schedule: data.schedule ?? null,
-            description: data.description ?? null,
-            notes: data.notes ?? null,
-        });
-        return mapApplication(app);
+        const cleanedData = cleanData(data);
+        const app = await repo.update(id, cleanedData);
+        return mapToResponse(app);
     }
 
 

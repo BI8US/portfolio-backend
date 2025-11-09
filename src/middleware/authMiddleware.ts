@@ -1,13 +1,18 @@
 import { Request, Response, NextFunction } from "express";
+import { ParamsDictionary, Query } from "express-serve-static-core";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
-export interface AuthRequest extends Request {
+export interface AuthRequest<
+    P = ParamsDictionary,
+    ReqBody = any,
+    ReqQuery = Query
+> extends Request<P, any, ReqBody, ReqQuery> {
     user?: { id: bigint; userName: string; role: string };
 }
 
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticate = (req: AuthRequest<any>, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -20,8 +25,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     }
 
     try {
-        const payload = jwt.verify(token, JWT_SECRET) as { id: bigint; userName: string; role: string };
-        req.user = payload;
+        req.user = jwt.verify(token, JWT_SECRET) as { id: bigint; userName: string; role: string };
         next();
     } catch (err) {
         return res.status(401).json({ message: "Invalid or expired token" });
@@ -29,7 +33,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
 };
 
 export const authorize = (...roles: string[]) => {
-    return (req: AuthRequest, res: Response, next: NextFunction) => {
+    return (req: AuthRequest<any>, res: Response, next: NextFunction) => {
         if (!req.user) {
             return res.status(401).json({ message: "Unauthorized" });
         }

@@ -1,4 +1,4 @@
-import { ResumeRepository } from "../repositories/resumeRepository";
+import {ResumeRepository, FullResume} from "../repositories/resumeRepository";
 import type {
     ResumeResponse,
     ResumeListItem,
@@ -7,77 +7,80 @@ import type {
     EducationDescriptionPoint, MediaLinkItem, ProjectItem, SkillItem, WorkExperienceDescriptionPoint
 } from "../controllers/resumeController";
 import {resumes} from "@prisma/client";
+import { CreateResumeDto, UpdateHeaderDto } from "../schemas/resume.schema";
 
 const repo = new ResumeRepository();
 
-type FullResume = any;
-type EducationWithPoints = any;
-type WorkExperienceWithPoints = any;
-type educationDescriptionPoints = any;
-type workExperienceDescriptionPoints = any;
-type mediaLinks = any;
-type projects = any;
-type skills = any;
-
-
 function mapResumeToResponse(resume: FullResume): ResumeResponse {
     return {
-        id: resume.id,
+        id: resume.id.toString(),
         resumeName: resume.resumeName,
         isActive: resume.isActive,
+
         fullName: resume.fullName || "",
         email: resume.email || "",
         phone: resume.phone || "",
         picture: resume.picture || "",
         summary: resume.summary || "",
+
         createdAt: resume.createdAt.toISOString(),
         updatedAt: resume.updatedAt.toISOString(),
 
-        educations: (resume.educations || []).map((e: EducationWithPoints): EducationItem => ({
-            id: e.id,
+        educations: (resume.educations || []).map((e): EducationItem => ({
+            id: e.id.toString(),
             school: e.school || "",
             educationName: e.educationName || "",
             startDate: e.startDate || "",
             endDate: e.endDate || "",
-            descriptionPoints: (e.descriptionPoints || []).map((dp: educationDescriptionPoints): EducationDescriptionPoint => ({
-                id: dp.id,
-                educationEntityId: dp.educationEntityId,
+            descriptionPoints: (e.descriptionPoints || []).map((dp): EducationDescriptionPoint => ({
+                id: dp.id.toString(),
+                educationEntityId: dp.educationEntityId.toString(),
                 descriptionPoint: dp.descriptionPoint || ""
             })),
         })),
 
-        mediaLinks: (resume.mediaLinks || []).map((m: mediaLinks): MediaLinkItem => ({
-            id: m.id,
+        mediaLinks: (resume.mediaLinks || []).map((m): MediaLinkItem => ({
+            id: m.id.toString(),
             name: m.name || "",
             link: m.link || ""
         })),
-        projects: (resume.projects || []).map((p: projects): ProjectItem => ({
-            id: p.id,
+
+        projects: (resume.projects || []).map((p): ProjectItem => ({
+            id: p.id.toString(),
             title: p.title || "",
             subTitle: p.subTitle || "",
             description: p.description || "",
             media: p.media || ""
         })),
-        skills: (resume.skills || []).map((s: skills): SkillItem => ({
-            id: s.id,
+
+        skills: (resume.skills || []).map((s): SkillItem => ({
+            id: s.id.toString(),
             name: s.name || "",
             skillGroup: s.skillGroup || ""
         })),
 
-        // 4. WorkExperiences (С вложенными точками)
-        workExperiences: (resume.workExperiences || []).map((w: WorkExperienceWithPoints): WorkExperienceItem => ({
-            id: w.id,
+        workExperiences: (resume.workExperiences || []).map((w): WorkExperienceItem => ({
+            id: w.id.toString(),
             company: w.company || "",
             position: w.position || "",
             startDate: w.startDate || "",
             endDate: w.endDate || "",
-            descriptionPoints: (w.descriptionPoints || []).map((dp: workExperienceDescriptionPoints): WorkExperienceDescriptionPoint => ({
-                id: dp.id,
-                WorkExperienceEntityId: dp.WorkExperienceEntityId,
+            descriptionPoints: (w.descriptionPoints || []).map((dp): WorkExperienceDescriptionPoint => ({
+                id: dp.id.toString(),
+                workExperienceEntityId: dp.workExperienceEntityId.toString(),
                 descriptionPoint: dp.descriptionPoint || ""
             })),
         })),
     } as ResumeResponse;
+}
+
+function cleanHeaderData(data: Omit<UpdateHeaderDto, 'mediaLinks'>): Partial<resumes> {
+    (Object.keys(data) as Array<keyof typeof data>).forEach(key => {
+        if (data[key] === undefined) {
+            delete data[key];
+        }
+    });
+    return data as Partial<resumes>;
 }
 
 export class ResumeService {
@@ -99,53 +102,112 @@ export class ResumeService {
         return mapResumeToResponse(resume);
     }
 
-    async create(resumeName: string): Promise<ResumeResponse> {
-        const created = await repo.create(resumeName);
+    async create(data: CreateResumeDto): Promise<ResumeResponse> {
+        const created = await repo.create(data.resumeName);
         return mapResumeToResponse({ ...created, educations: [], mediaLinks: [], projects: [], skills: [], workExperiences: [] });
     }
 
-    async updateHeader(id: bigint, data: Partial<ResumeResponse>): Promise<ResumeResponse> {
-        const prismaData: Partial<Omit<resumes, 'id' | 'createdAt' | 'updatedAt'>> = {
-            ...(data.resumeName !== undefined && { resumeName: data.resumeName }),
-            ...(data.isActive !== undefined && { isActive: data.isActive }),
-            fullName: data.fullName ?? null,
-            email: data.email ?? null,
-            phone: data.phone ?? null,
-            picture: data.picture ?? null,
-            summary: data.summary ?? null,
-        };
-
-        await repo.update(id, prismaData);
-
+    async updateHeader(id: bigint, data: UpdateHeaderDto): Promise<ResumeResponse> {
+        const { mediaLinks, ...headerData } = data;
+        const cleanedHeaderData = cleanHeaderData(headerData);
+        await repo.update(id, cleanedHeaderData);
         if (data.isActive) {
             const all = await repo.getAll();
             await Promise.all(
                 all
-                    .filter(r => BigInt(r.id) !== id)
+                    .filter(r => r.id.toString() !== id.toString())
                     .map(r => repo.update(r.id, { isActive: false }))
             );
         }
-
-        if (data.mediaLinks) {
-            await this.updateChildList(id, data.mediaLinks, "mediaLinks");
+        if (mediaLinks) {
+            await this.updateMediaLinks(id, mediaLinks);
         }
 
         return this.getById(id);
     }
 
-    async updateChildList<T>(id: bigint, items: T[], listName: "educations" | "projects" | "skills" | "workExperiences" | "mediaLinks"): Promise<ResumeResponse> {
-        await repo.clearChildList(listName, id);
+    private async updateMediaLinks(resumeId: bigint, items: MediaLinkItem[]) {
+        await repo.clearChildList("mediaLinks", resumeId);
+        for (const item of items) {
+            const {id, ...rest} = item;
+            const data = {
+                ...rest,
+                resume: {
+                    connect: { id: resumeId }
+                }
+            };
+            await repo.createMediaLinkItem(data);
+        }
+    }
+
+    async updateEducations(resumeId: bigint, items: EducationItem[]): Promise<void> {
+        await repo.clearChildList("educations", resumeId);
 
         for (const item of items) {
-            const { descriptionPoints, ...rest } = item as any;
-            const childData: any = { ...rest, resumeId: id };
-            if (descriptionPoints && descriptionPoints.length > 0) {
-                childData.descriptionPoints = { create: descriptionPoints.map((dp: any) => ({ descriptionPoint: dp.descriptionPoint })) };
-            }
-            await repo.createChildItem(listName, childData);
+            const {id, descriptionPoints, ...rest} = item;
+            const data = {
+                ...rest,
+                descriptionPoints: {
+                    create: descriptionPoints.map(dp => ({
+                        descriptionPoint: dp.descriptionPoint,
+                    }))
+                },
+                resume: {
+                    connect: { id: resumeId }
+                }
+            };
+            await repo.createEducationItem(data);
         }
+    }
 
-        return this.getById(id);
+    async updateWorkExperiences(resumeId: bigint, items: WorkExperienceItem[]): Promise<void> {
+        await repo.clearChildList("workExperiences", resumeId);
+
+        for (const item of items) {
+            const {id, descriptionPoints, ...rest} = item;
+            const data = {
+                ...rest,
+                descriptionPoints: {
+                    create: descriptionPoints.map(dp => ({
+                        descriptionPoint: dp.descriptionPoint,
+                    }))
+                },
+                resume: {
+                    connect: { id: resumeId }
+                }
+            };
+            await repo.createWorkExperienceItem(data);
+        }
+    }
+
+    async updateProjects(resumeId: bigint, items: ProjectItem[]): Promise<void> {
+        await repo.clearChildList("projects", resumeId);
+
+        for (const item of items) {
+            const {id, ...rest} = item;
+            const data = {
+                ...rest,
+                resume: {
+                    connect: { id: resumeId }
+                }
+            };
+            await repo.createProjectItem(data);
+        }
+    }
+
+    async updateSkills(resumeId: bigint, items: SkillItem[]): Promise<void> {
+        await repo.clearChildList("skills", resumeId);
+
+        for (const item of items) {
+            const {id, ...rest} = item;
+            const data = {
+                ...rest,
+                resume: {
+                    connect: { id: resumeId }
+                }
+            };
+            await repo.createSkillItem(data);
+        }
     }
 
     async delete(id: bigint): Promise<void> {

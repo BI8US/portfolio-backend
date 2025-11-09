@@ -1,5 +1,15 @@
 import { Request, Response } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
 import { ResumeService } from "../services/resumeService";
+import {
+    ResumeParams,
+    CreateResumeDto,
+    UpdateHeaderDto,
+    UpdateEducationsDto,
+    UpdateProjectsDto,
+    UpdateSkillsDto,
+    UpdateWorkExperiencesDto
+} from "../schemas/resume.schema";
 
 const resumeService = new ResumeService();
 
@@ -19,18 +29,12 @@ export class ResumeController {
     }
 
     async getById(
-        req: Request<{ id: string }>,
+        req: Request<ResumeParams>,
         res: Response<ResumeResponse | ErrorResponse>
     ): Promise<void> {
         try {
             const { id } = req.params;
-            if (!id) {
-                res.status(400).json({ error: "ID is required" });
-                return;
-            }
-
-            const numericId = BigInt(id);
-            const resume = await resumeService.getById(numericId);
+            const resume = await resumeService.getById(id);
             res.json(resume);
         } catch (err: any) {
             console.error("❌ Error getting resume by id:", err);
@@ -39,17 +43,11 @@ export class ResumeController {
     }
 
     async create(
-        req: Request<{}, {}, CreateResumeRequest>,
+        req: Request<ParamsDictionary, any, CreateResumeDto>,
         res: Response<ResumeResponse | ErrorResponse>
     ): Promise<void> {
         try {
-            const { resumeName } = req.body;
-            if (!resumeName) {
-                res.status(400).json({ error: "resumeName is required and must be a string" });
-                return;
-            }
-
-            const createdResume = await resumeService.create(resumeName);
+            const createdResume = await resumeService.create(req.body);
             res.status(201).json(createdResume);
         } catch (err) {
             console.error("❌ Error creating resume:", err);
@@ -58,18 +56,12 @@ export class ResumeController {
     }
 
     async updateHeader(
-        req: Request<{ id: string }, {}, UpdateHeaderRequest>,
+        req: Request<ResumeParams, any, UpdateHeaderDto>,
         res: Response<ResumeResponse | ErrorResponse>
     ): Promise<void> {
         try {
             const { id } = req.params;
-            if (!id) {
-                res.status(400).json({ error: "ID is required" });
-                return;
-            }
-
-            const numericId = BigInt(id);
-            const updatedResume = await resumeService.updateHeader(numericId, req.body);
+            const updatedResume = await resumeService.updateHeader(id, req.body);
             res.json(updatedResume);
         } catch (error) {
             console.error("❌ Error updating resume header:", error);
@@ -78,75 +70,76 @@ export class ResumeController {
     }
 
     async updateEducations(
-        req: Request<{ id: string }, {}, EducationItem[]>,
+        req: Request<ResumeParams, any, UpdateEducationsDto>,
         res: Response<ResumeResponse | ErrorResponse>
-    ): Promise<void> {
-        await this.handleChildListUpdate(req, res, "educations");
-    }
-
-    async updateProjects(
-        req: Request<{ id: string }, {}, ProjectItem[]>,
-        res: Response<ResumeResponse | ErrorResponse>
-    ): Promise<void> {
-        await this.handleChildListUpdate(req, res, "projects");
-    }
-
-    async updateSkills(
-        req: Request<{ id: string }, {}, SkillItem[]>,
-        res: Response<ResumeResponse | ErrorResponse>
-    ): Promise<void> {
-        await this.handleChildListUpdate(req, res, "skills");
-    }
-
-    async updateWorkExperiences(
-        req: Request<{ id: string }, {}, WorkExperienceItem[]>,
-        res: Response<ResumeResponse | ErrorResponse>
-    ): Promise<void> {
-        await this.handleChildListUpdate(req, res, "workExperiences");
-    }
-
-    private async handleChildListUpdate<T>(
-        req: Request<{ id: string }, {}, T[]>,
-        res: Response<ResumeResponse | ErrorResponse>,
-        field: "educations" | "projects" | "skills" | "workExperiences"
     ): Promise<void> {
         try {
             const { id } = req.params;
-            if (!id) {
-                res.status(400).json({ error: "ID is required" });
-                return;
-            }
-
-            const numericId = BigInt(id);
-
             const items = req.body;
-            if (!Array.isArray(items)) {
-                res.status(400).json({ error: "Invalid body: expected an array" });
-                return;
-            }
-
-            const updatedResume = await resumeService.updateChildList(
-                numericId,
-                items,
-                field
-            );
-
+            await resumeService.updateEducations(id, items);
+            const updatedResume = await resumeService.getById(id);
             res.json(updatedResume);
         } catch (error: any) {
-            console.error(`❌ Error updating ${field}:`, error);
-            res.status(500).json({ message: `Error updating ${field}` });
+            console.error(`❌ Error updating educations:`, error);
+            res.status(500).json({ message: `Error updating educations` });
         }
     }
 
-    async delete(req: Request<{ id: string }>, res: Response): Promise<void> {
+    async updateProjects(
+        req: Request<ResumeParams, any, UpdateProjectsDto>,
+        res: Response<ResumeResponse | ErrorResponse>
+    ): Promise<void> {
         try {
             const { id } = req.params;
-            if (!id) {
-                res.status(400).json({ error: "ID is required" });
-                return;
-            }
-            const numericId = BigInt(id);
-            await resumeService.delete(numericId);
+            const items = req.body;
+            await resumeService.updateProjects(id, items);
+            const updatedResume = await resumeService.getById(id);
+            res.json(updatedResume);
+        } catch (error: any) {
+            console.error(`❌ Error updating projects:`, error);
+            res.status(500).json({ message: `Error updating projects` });
+        }
+    }
+
+    async updateSkills(
+        req: Request<ResumeParams, any, UpdateSkillsDto>,
+        res: Response<ResumeResponse | ErrorResponse>
+    ): Promise<void> {
+        try {
+            const { id } = req.params;
+            const items = req.body;
+            await resumeService.updateSkills(id, items);
+            const updatedResume = await resumeService.getById(id);
+            res.json(updatedResume);
+        } catch (error: any) {
+            console.error(`❌ Error updating skills:`, error);
+            res.status(500).json({ message: `Error updating skills` });
+        }
+    }
+
+    async updateWorkExperiences(
+        req: Request<ResumeParams, any, UpdateWorkExperiencesDto>,
+        res: Response<ResumeResponse | ErrorResponse>
+    ): Promise<void> {
+        try {
+            const { id } = req.params;
+            const items = req.body;
+            await resumeService.updateWorkExperiences(id, items);
+            const updatedResume = await resumeService.getById(id);
+            res.json(updatedResume);
+        } catch (error: any) {
+            console.error(`❌ Error updating workExperiences:`, error);
+            res.status(500).json({ message: `Error updating workExperiences` });
+        }
+    }
+
+    async delete(
+        req: Request<ResumeParams>,
+        res: Response
+    ): Promise<void> {
+        try {
+            const { id } = req.params;
+            await resumeService.delete(id);
             res.status(204).send();
         } catch (error: any) {
             console.error("❌ Error deleting resume:", error);
@@ -183,22 +176,6 @@ export interface ResumeListItem {
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
-}
-
-interface CreateResumeRequest {
-    resumeName: string;
-}
-
-interface UpdateHeaderRequest {
-    id?: string;
-    resumeName?: string;
-    isActive?: boolean;
-    fullName?: string;
-    email?: string;
-    phone?: string;
-    picture?: string;
-    summary?: string;
-    mediaLinks?: MediaLinkItem[];
 }
 
 export interface ResumeResponse {
@@ -265,7 +242,7 @@ export interface WorkExperienceItem {
 
 export interface WorkExperienceDescriptionPoint {
     id: string;
-    WorkExperienceEntityId: string;
+    workExperienceEntityId: string;
     descriptionPoint: string;
 }
 
