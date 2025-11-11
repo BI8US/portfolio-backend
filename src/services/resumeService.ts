@@ -22,6 +22,8 @@ function mapResumeToResponse(resume: FullResume): ResumeResponse {
         phone: resume.phone || "",
         picture: resume.picture || "",
         summary: resume.summary || "",
+        location: resume.location || "",
+        intro: resume.intro || "",
 
         createdAt: resume.createdAt.toISOString(),
         updatedAt: resume.updatedAt.toISOString(),

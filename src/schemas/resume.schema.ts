@@ -14,25 +14,25 @@ const params = z.object({
 const nullableString = z.string().nullish().transform(val => val ?? null);
 
 const educationDescriptionPointSchema = z.object({
-    id: z.string(),
+    id: z.string().optional(),
     educationEntityId: z.string(),
     descriptionPoint: z.string(),
 });
 
 const workExperienceDescriptionPointSchema = z.object({
-    id: z.string(),
+    id: z.string().optional(),
     workExperienceEntityId: z.string(),
     descriptionPoint: z.string(),
 });
 
 const mediaLinkSchema = z.object({
-    id: z.string(),
+    id: z.string().optional(),
     name: z.string(),
     link: z.string()
 });
 
 const projectSchema = z.object({
-    id: z.string(),
+    id: z.string().optional(),
     title: z.string(),
     subTitle: z.string(),
     description: z.string(),
@@ -40,13 +40,13 @@ const projectSchema = z.object({
 });
 
 const skillSchema = z.object({
-    id: z.string(),
+    id: z.string().optional(),
     name: z.string(),
     skillGroup: z.string(),
 });
 
 const educationSchema = z.object({
-    id: z.string(),
+    id: z.string().optional(),
     school: z.string(),
     educationName: z.string(),
     startDate: z.string(),
@@ -55,7 +55,7 @@ const educationSchema = z.object({
 });
 
 const workExperienceSchema = z.object({
-    id: z.string(),
+    id: z.string().optional(),
     company: z.string(),
     position: z.string(),
     startDate: z.string(),
@@ -85,6 +85,8 @@ export const updateHeaderSchema = z.object({
         phone: nullableString,
         picture: nullableString,
         summary: nullableString,
+        location: nullableString,
+        intro: nullableString,
         mediaLinks: z.array(mediaLinkSchema),
     }).partial()
 });
@@ -112,7 +114,7 @@ export const updateWorkExperiencesSchema = z.object({
 
 export type ResumeParams = z.output<typeof params>;
 export type CreateResumeDto = z.infer<typeof createResumeSchema>['body'];
-export type UpdateHeaderDto = z.output<typeof updateHeaderSchema>['body'];
+export type UpdateHeaderDto = z.infer<typeof updateHeaderSchema>['body'];
 export type UpdateEducationsDto = z.infer<typeof updateEducationsSchema>['body'];
 export type UpdateProjectsDto = z.infer<typeof updateProjectsSchema>['body'];
 export type UpdateSkillsDto = z.infer<typeof updateSkillsSchema>['body'];

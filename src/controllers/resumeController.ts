@@ -187,6 +187,8 @@ export interface ResumeResponse {
     phone?: string;
     picture?: string;
     summary?: string;
+    location?: string | undefined;
+    intro?: string | undefined;
     createdAt: string;
     updatedAt: string;
     educations: EducationItem[];
@@ -197,7 +199,7 @@ export interface ResumeResponse {
 }
 
 export interface EducationItem {
-    id: string;
+    id?: string| undefined;
     school: string;
     educationName: string;
     startDate: string;
@@ -206,19 +208,19 @@ export interface EducationItem {
 }
 
 export interface EducationDescriptionPoint {
-    id: string;
+    id?: string| undefined;
     educationEntityId: string;
     descriptionPoint: string;
 }
 
 export interface MediaLinkItem {
-    id: string;
+    id?: string| undefined;
     name: string;
     link: string;
 }
 
 export interface ProjectItem {
-    id: string;
+    id?: string| undefined;
     title: string;
     subTitle: string;
     description: string;
@@ -226,13 +228,13 @@ export interface ProjectItem {
 }
 
 export interface SkillItem {
-    id: string;
+    id?: string| undefined;
     name: string;
     skillGroup: string;
 }
 
 export interface WorkExperienceItem {
-    id: string;
+    id?: string| undefined;
     company: string;
     position: string;
     startDate: string;
@@ -241,7 +243,7 @@ export interface WorkExperienceItem {
 }
 
 export interface WorkExperienceDescriptionPoint {
-    id: string;
+    id?: string| undefined;
     workExperienceEntityId: string;
     descriptionPoint: string;
 }

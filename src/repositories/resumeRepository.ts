@@ -55,6 +55,8 @@ export class ResumeRepository {
                 phone: "",
                 picture: "/images/avatar.jpg",
                 summary: "",
+                location: null,
+                intro: null,
             }
         });
     }
