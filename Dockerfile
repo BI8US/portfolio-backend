@@ -12,4 +12,4 @@ RUN npm run build
 
 EXPOSE 8080
 
-CMD ["npx", "ts-node", "--transpile-only", "src/server.ts"]
+CMD npx prisma migrate deploy && node dist/server.js
