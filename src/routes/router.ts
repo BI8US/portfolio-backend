@@ -29,8 +29,8 @@ const authController = new AuthController();
 const jobApplicationController = new JobApplicationController();
 
 // --- AUTH ---
-router.post("/auth/register",
-    authController.register.bind(authController));
+// router.post("/auth/register",
+//     authController.register.bind(authController));
 router.post("/auth/login",
     validate(loginSchema),
     authController.login.bind(authController));
