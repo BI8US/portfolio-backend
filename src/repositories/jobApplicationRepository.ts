@@ -1,5 +1,6 @@
-import prisma from "../prismaClient";
-import { Prisma } from "@prisma/client";
+import { Prisma } from '@prisma/client';
+
+import prisma from '../prismaClient';
 
 export class JobApplicationRepository {
     async getAll() {
@@ -12,7 +13,7 @@ export class JobApplicationRepository {
                 createdAt: true,
                 updatedAt: true,
             },
-            orderBy: { createdAt: "desc" },
+            orderBy: { createdAt: 'desc' },
         });
     }
 
@@ -22,17 +23,14 @@ export class JobApplicationRepository {
 
     async create(data: Prisma.jobApplicationsCreateInput) {
         return prisma.jobApplications.create({
-            data: data
+            data: data,
         });
     }
 
-    async update(
-        id: bigint,
-        data: Prisma.jobApplicationsUpdateInput
-    ) {
+    async update(id: bigint, data: Prisma.jobApplicationsUpdateInput) {
         return prisma.jobApplications.update({
             where: { id },
-            data: data
+            data: data,
         });
     }
 

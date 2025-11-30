@@ -1,26 +1,27 @@
-import { Router } from "express";
-import { ResumeController } from "../controllers/resumeController";
-import { AuthController } from "../controllers/authController";
-import { JobApplicationController } from "../controllers/jobApplicationController";
-import { authenticate, authorize } from "../middleware/authMiddleware";
-import { validate } from "../middleware/validate";
-import { loginSchema } from "../schemas/auth.schema";
+import { Router } from 'express';
+
+import { AuthController } from '../controllers/authController';
+import { JobApplicationController } from '../controllers/jobApplicationController';
+import { ResumeController } from '../controllers/resumeController';
+import { authenticate, authorize } from '../middleware/authMiddleware';
+import { validate } from '../middleware/validate';
+import { loginSchema } from '../schemas/auth.schema';
 import {
     ApplicationParams,
     createApplicationSchema,
+    getOrDeleteApplicationSchema,
     updateApplicationSchema,
-    getOrDeleteApplicationSchema
-} from "../schemas/jobApplication.schema";
+} from '../schemas/jobApplication.schema';
 import {
-    ResumeParams,
-    getOrDeleteResumeSchema,
     createResumeSchema,
-    updateHeaderSchema,
+    getOrDeleteResumeSchema,
+    ResumeParams,
     updateEducationsSchema,
+    updateHeaderSchema,
     updateProjectsSchema,
     updateSkillsSchema,
-    updateWorkExperiencesSchema
-} from "../schemas/resume.schema";
+    updateWorkExperiencesSchema,
+} from '../schemas/resume.schema';
 
 const router = Router();
 
@@ -31,134 +32,128 @@ const jobApplicationController = new JobApplicationController();
 // --- AUTH ---
 // router.post("/auth/register",
 //     authController.register.bind(authController));
-router.post("/auth/login",
-    validate(loginSchema),
-    authController.login.bind(authController));
+router.post('/auth/login', validate(loginSchema), authController.login.bind(authController));
 
 // --- RESUMES ---
 router.get(
-    "/resume",
+    '/resume',
     authenticate,
-    authorize("USER", "ADMIN"),
-    resumeController.getAllResumes.bind(resumeController)
+    authorize('USER', 'ADMIN'),
+    resumeController.getAllResumes.bind(resumeController),
 );
 
-router.get(
-    "/resume/active",
-    resumeController.getActiveResume.bind(resumeController)
-);
+router.get('/resume/active', resumeController.getActiveResume.bind(resumeController));
 
 router.get<ResumeParams>(
-    "/resume/:id",
+    '/resume/:id',
     authenticate,
-    authorize("USER", "ADMIN"),
+    authorize('USER', 'ADMIN'),
     validate(getOrDeleteResumeSchema),
-    resumeController.getById.bind(resumeController)
+    resumeController.getById.bind(resumeController),
 );
 
 router.post(
-    "/resume",
+    '/resume',
     authenticate,
-    authorize("ADMIN"),
+    authorize('ADMIN'),
     validate(createResumeSchema),
-    resumeController.create.bind(resumeController)
+    resumeController.create.bind(resumeController),
 );
 
 router.delete<ResumeParams>(
-    "/resume/:id",
+    '/resume/:id',
     authenticate,
-    authorize("ADMIN"),
+    authorize('ADMIN'),
     validate(getOrDeleteResumeSchema),
-    resumeController.delete.bind(resumeController)
+    resumeController.delete.bind(resumeController),
 );
 
 // --- UPDATE HEADER ---
 router.patch<ResumeParams>(
-    "/resume/:id",
+    '/resume/:id',
     authenticate,
-    authorize("ADMIN"),
+    authorize('ADMIN'),
     validate(updateHeaderSchema),
-    resumeController.updateHeader.bind(resumeController)
+    resumeController.updateHeader.bind(resumeController),
 );
 
 // --- UPDATE CHILD LISTS ---
 router.patch<ResumeParams>(
-    "/resume/:id/educations",
+    '/resume/:id/educations',
     authenticate,
-    authorize("ADMIN"),
+    authorize('ADMIN'),
     validate(updateEducationsSchema),
-    resumeController.updateEducations.bind(resumeController)
+    resumeController.updateEducations.bind(resumeController),
 );
 
 router.patch<ResumeParams>(
-    "/resume/:id/projects",
+    '/resume/:id/projects',
     authenticate,
-    authorize("ADMIN"),
+    authorize('ADMIN'),
     validate(updateProjectsSchema),
-    resumeController.updateProjects.bind(resumeController)
+    resumeController.updateProjects.bind(resumeController),
 );
 
 router.patch<ResumeParams>(
-    "/resume/:id/skills",
+    '/resume/:id/skills',
     authenticate,
-    authorize("ADMIN"),
+    authorize('ADMIN'),
     validate(updateSkillsSchema),
-    resumeController.updateSkills.bind(resumeController)
+    resumeController.updateSkills.bind(resumeController),
 );
 
 router.patch<ResumeParams>(
-    "/resume/:id/workexperiences",
+    '/resume/:id/workexperiences',
     authenticate,
-    authorize("ADMIN"),
+    authorize('ADMIN'),
     validate(updateWorkExperiencesSchema),
-    resumeController.updateWorkExperiences.bind(resumeController)
+    resumeController.updateWorkExperiences.bind(resumeController),
 );
 
 // --- APPLICATIONS ---
 
 router.get(
-    "/applications",
+    '/applications',
     authenticate,
-    authorize("USER", "ADMIN"),
-    jobApplicationController.getAllApplications.bind(jobApplicationController)
+    authorize('USER', 'ADMIN'),
+    jobApplicationController.getAllApplications.bind(jobApplicationController),
 );
 
 router.get<ApplicationParams>(
-    "/applications/:id",
+    '/applications/:id',
     authenticate,
-    authorize("USER", "ADMIN"),
+    authorize('USER', 'ADMIN'),
     validate(getOrDeleteApplicationSchema),
-    jobApplicationController.getById.bind(jobApplicationController)
-)
+    jobApplicationController.getById.bind(jobApplicationController),
+);
 
 router.post(
-    "/applications",
+    '/applications',
     authenticate,
-    authorize("ADMIN"),
+    authorize('ADMIN'),
     validate(createApplicationSchema),
-    jobApplicationController.create.bind(jobApplicationController)
-)
+    jobApplicationController.create.bind(jobApplicationController),
+);
 
 router.patch<ApplicationParams>(
-    "/applications/:id",
+    '/applications/:id',
     authenticate,
-    authorize("ADMIN"),
+    authorize('ADMIN'),
     validate(updateApplicationSchema),
-    jobApplicationController.update.bind(jobApplicationController)
-)
+    jobApplicationController.update.bind(jobApplicationController),
+);
 
 router.delete<ApplicationParams>(
-    "/applications/:id",
+    '/applications/:id',
     authenticate,
-    authorize("ADMIN"),
+    authorize('ADMIN'),
     validate(getOrDeleteApplicationSchema),
-    jobApplicationController.delete.bind(jobApplicationController)
-
-)
+    jobApplicationController.delete.bind(jobApplicationController),
+);
 
 // --- ROOT TEST ---
-router.get("/", (req, res) => {
-    res.json({ message: "API is working!" });
+router.get('/', (req, res) => {
+    res.json({ message: 'API is working!' });
 });
 
 export default router;

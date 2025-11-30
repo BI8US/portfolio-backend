@@ -1,5 +1,6 @@
-import prisma from "../prismaClient";
-import {Prisma} from "@prisma/client";
+import { Prisma } from '@prisma/client';
+
+import prisma from '../prismaClient';
 
 export class UserRepository {
     async findByUserName(userName: string) {

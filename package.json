@@ -9,7 +9,11 @@
     "start": "docker compose up",
     "stop": "docker compose down",
     "logs": "docker compose logs -f app",
-    "rebuild": "docker compose down && docker compose up --build"
+    "rebuild": "docker compose down && docker compose up --build",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "fix:all": "npm run format && npm run lint:fix"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +24,13 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.7.0",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "prettier": "^3.7.3",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"

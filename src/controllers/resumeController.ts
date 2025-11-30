@@ -1,77 +1,77 @@
-import { Request, Response } from "express";
-import { ParamsDictionary } from "express-serve-static-core";
-import { ResumeService } from "../services/resumeService";
+import { Request, Response } from 'express';
+import { ParamsDictionary } from 'express-serve-static-core';
+
 import {
-    ResumeParams,
     CreateResumeDto,
-    UpdateHeaderDto,
+    ResumeParams,
     UpdateEducationsDto,
+    UpdateHeaderDto,
     UpdateProjectsDto,
     UpdateSkillsDto,
-    UpdateWorkExperiencesDto
-} from "../schemas/resume.schema";
+    UpdateWorkExperiencesDto,
+} from '../schemas/resume.schema';
+import { ResumeService } from '../services/resumeService';
 
 const resumeService = new ResumeService();
 
 export class ResumeController {
-
     async getAllResumes(
         req: Request,
-        res: Response<ResumeListItem[] | ErrorResponse>
+        res: Response<ResumeListItem[] | ErrorResponse>,
     ): Promise<void> {
         try {
             const resumes = await resumeService.getAll();
             res.json(resumes);
         } catch (err) {
-            console.error("❌ Error fetching resumes:", err);
-            res.status(500).json({ error: "Failed to fetch resumes" });
+            console.error('❌ Error fetching resumes:', err);
+            res.status(500).json({ error: 'Failed to fetch resumes' });
         }
     }
 
     async getById(
         req: Request<ResumeParams>,
-        res: Response<ResumeResponse | ErrorResponse>
+        res: Response<ResumeResponse | ErrorResponse>,
     ): Promise<void> {
         try {
             const { id } = req.params;
             const resume = await resumeService.getById(id);
             res.json(resume);
         } catch (err: any) {
-            console.error("❌ Error getting resume by id:", err);
+            console.error('❌ Error getting resume by id:', err);
             res.status(404).json({ error: err.message });
         }
     }
 
     async create(
         req: Request<ParamsDictionary, any, CreateResumeDto>,
-        res: Response<ResumeResponse | ErrorResponse>
+        res: Response<ResumeResponse | ErrorResponse>,
     ): Promise<void> {
         try {
             const createdResume = await resumeService.create(req.body);
             res.status(201).json(createdResume);
         } catch (err) {
-            console.error("❌ Error creating resume:", err);
-            res.status(500).json({ error: "Failed to create resume" });
+            console.error('❌ Error creating resume:', err);
+            res.status(500).json({ error: 'Failed to create resume' });
         }
     }
 
     async updateHeader(
         req: Request<ResumeParams, any, UpdateHeaderDto>,
-        res: Response<ResumeResponse | ErrorResponse>
+        res: Response<ResumeResponse | ErrorResponse>,
     ): Promise<void> {
         try {
             const { id } = req.params;
             const updatedResume = await resumeService.updateHeader(id, req.body);
             res.json(updatedResume);
         } catch (error) {
-            console.error("❌ Error updating resume header:", error);
-            res.status(500).json({ message: "Error updating resume header" });
+            console.error('❌ Error updating resume header:', error);
+            res.status(500).json({ message: 'Error updating resume header' });
         }
     }
 
     async updateEducations(
         req: Request<ResumeParams, any, UpdateEducationsDto>,
-        res: Response<ResumeResponse | ErrorResponse>
+        res: Response<ResumeResponse | ErrorResponse>,
     ): Promise<void> {
         try {
             const { id } = req.params;
@@ -87,7 +87,7 @@ export class ResumeController {
 
     async updateProjects(
         req: Request<ResumeParams, any, UpdateProjectsDto>,
-        res: Response<ResumeResponse | ErrorResponse>
+        res: Response<ResumeResponse | ErrorResponse>,
     ): Promise<void> {
         try {
             const { id } = req.params;
@@ -103,7 +103,7 @@ export class ResumeController {
 
     async updateSkills(
         req: Request<ResumeParams, any, UpdateSkillsDto>,
-        res: Response<ResumeResponse | ErrorResponse>
+        res: Response<ResumeResponse | ErrorResponse>,
     ): Promise<void> {
         try {
             const { id } = req.params;
@@ -119,7 +119,7 @@ export class ResumeController {
 
     async updateWorkExperiences(
         req: Request<ResumeParams, any, UpdateWorkExperiencesDto>,
-        res: Response<ResumeResponse | ErrorResponse>
+        res: Response<ResumeResponse | ErrorResponse>,
     ): Promise<void> {
         try {
             const { id } = req.params;
@@ -133,33 +133,30 @@ export class ResumeController {
         }
     }
 
-    async delete(
-        req: Request<ResumeParams>,
-        res: Response
-    ): Promise<void> {
+    async delete(req: Request<ResumeParams>, res: Response): Promise<void> {
         try {
             const { id } = req.params;
             await resumeService.delete(id);
             res.status(204).send();
         } catch (error: any) {
-            console.error("❌ Error deleting resume:", error);
-            if (error.code === "P2025") {
-                res.status(404).json({ message: "Resume not found" });
+            console.error('❌ Error deleting resume:', error);
+            if (error.code === 'P2025') {
+                res.status(404).json({ message: 'Resume not found' });
             } else {
-                res.status(500).json({ message: "Error deleting resume" });
+                res.status(500).json({ message: 'Error deleting resume' });
             }
         }
     }
 
     async getActiveResume(
         req: Request,
-        res: Response<ResumeResponse | ErrorResponse>
+        res: Response<ResumeResponse | ErrorResponse>,
     ): Promise<void> {
         try {
             const activeResume = await resumeService.getActiveResume();
             res.json(activeResume);
         } catch (err: any) {
-            console.error("❌ Error getting active resume:", err);
+            console.error('❌ Error getting active resume:', err);
             res.status(404).json({ error: err.message });
         }
     }
@@ -199,7 +196,7 @@ export interface ResumeResponse {
 }
 
 export interface EducationItem {
-    id?: string| undefined;
+    id?: string | undefined;
     school: string;
     educationName: string;
     startDate: string;
@@ -208,19 +205,19 @@ export interface EducationItem {
 }
 
 export interface EducationDescriptionPoint {
-    id?: string| undefined;
+    id?: string | undefined;
     educationEntityId: string;
     descriptionPoint: string;
 }
 
 export interface MediaLinkItem {
-    id?: string| undefined;
+    id?: string | undefined;
     name: string;
     link: string;
 }
 
 export interface ProjectItem {
-    id?: string| undefined;
+    id?: string | undefined;
     title: string;
     subTitle: string;
     description: string;
@@ -228,13 +225,13 @@ export interface ProjectItem {
 }
 
 export interface SkillItem {
-    id?: string| undefined;
+    id?: string | undefined;
     name: string;
     skillGroup: string;
 }
 
 export interface WorkExperienceItem {
-    id?: string| undefined;
+    id?: string | undefined;
     company: string;
     position: string;
     startDate: string;
@@ -243,9 +240,7 @@ export interface WorkExperienceItem {
 }
 
 export interface WorkExperienceDescriptionPoint {
-    id?: string| undefined;
+    id?: string | undefined;
     workExperienceEntityId: string;
     descriptionPoint: string;
 }
-
-

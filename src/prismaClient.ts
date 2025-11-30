@@ -12,7 +12,7 @@ function convertBigIntToString(result: any): any {
     }
 
     if (Array.isArray(result)) {
-        return result.map(item => convertBigIntToString(item));
+        return result.map((item) => convertBigIntToString(item));
     }
 
     if (typeof result === 'object') {

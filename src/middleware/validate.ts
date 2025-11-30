@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import { z, ZodObject, ZodError } from 'zod';
+import { NextFunction, Request, Response } from 'express';
+import { z, ZodError, ZodObject } from 'zod';
 
-export const validate = (schema: ZodObject<any>) =>
-    (req: Request<any>, res: Response, next: NextFunction) => {
+export const validate =
+    (schema: ZodObject<any>) => (req: Request<any>, res: Response, next: NextFunction) => {
         try {
             const parsed = schema.parse({
                 body: req.body,
@@ -17,11 +17,11 @@ export const validate = (schema: ZodObject<any>) =>
         } catch (error) {
             if (error instanceof ZodError) {
                 return res.status(400).json({
-                    message: "Validation failed.",
-                    errors: z.treeifyError(error)
+                    message: 'Validation failed.',
+                    errors: z.treeifyError(error),
                 });
             }
 
-            res.status(500).json({ error: "Internal Server Error" });
+            res.status(500).json({ error: 'Internal Server Error' });
         }
     };

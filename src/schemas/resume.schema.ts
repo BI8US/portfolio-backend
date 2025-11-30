@@ -5,13 +5,16 @@ const params = z.object({
         try {
             return BigInt(val);
         } catch (e) {
-            ctx.addIssue({ code: "custom", message: 'ID must be a valid number' });
+            ctx.addIssue({ code: 'custom', message: 'ID must be a valid number' });
             return z.NEVER;
         }
     }),
 });
 
-const nullableString = z.string().nullish().transform(val => val ?? null);
+const nullableString = z
+    .string()
+    .nullish()
+    .transform((val) => val ?? null);
 
 const educationDescriptionPointSchema = z.object({
     id: z.string().optional(),
@@ -28,7 +31,7 @@ const workExperienceDescriptionPointSchema = z.object({
 const mediaLinkSchema = z.object({
     id: z.string().optional(),
     name: z.string(),
-    link: z.string()
+    link: z.string(),
 });
 
 const projectSchema = z.object({
@@ -63,53 +66,52 @@ const workExperienceSchema = z.object({
     descriptionPoints: z.array(workExperienceDescriptionPointSchema),
 });
 
-
-
 export const getOrDeleteResumeSchema = z.object({
     params,
 });
 
 export const createResumeSchema = z.object({
     body: z.object({
-        resumeName: z.string().min(1, "Resume name is required"),
-    })
+        resumeName: z.string().min(1, 'Resume name is required'),
+    }),
 });
 
 export const updateHeaderSchema = z.object({
     params,
-    body: z.object({
-        resumeName: z.string().min(1),
-        isActive: z.boolean(),
-        fullName: nullableString,
-        email: nullableString,
-        phone: nullableString,
-        picture: nullableString,
-        summary: nullableString,
-        location: nullableString,
-        intro: nullableString,
-        mediaLinks: z.array(mediaLinkSchema),
-    }).partial()
+    body: z
+        .object({
+            resumeName: z.string().min(1),
+            isActive: z.boolean(),
+            fullName: nullableString,
+            email: nullableString,
+            phone: nullableString,
+            picture: nullableString,
+            summary: nullableString,
+            location: nullableString,
+            intro: nullableString,
+            mediaLinks: z.array(mediaLinkSchema),
+        })
+        .partial(),
 });
 
 export const updateEducationsSchema = z.object({
     params,
-    body: z.array(educationSchema)
-
+    body: z.array(educationSchema),
 });
 
 export const updateProjectsSchema = z.object({
     params,
-    body: z.array(projectSchema)
+    body: z.array(projectSchema),
 });
 
 export const updateSkillsSchema = z.object({
     params,
-    body: z.array(skillSchema)
+    body: z.array(skillSchema),
 });
 
 export const updateWorkExperiencesSchema = z.object({
     params,
-    body: z.array(workExperienceSchema)
+    body: z.array(workExperienceSchema),
 });
 
 export type ResumeParams = z.output<typeof params>;

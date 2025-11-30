@@ -1,5 +1,6 @@
-import prisma from "../prismaClient";
-import type {resumes, Prisma} from "@prisma/client";
+import type { Prisma, resumes } from '@prisma/client';
+
+import prisma from '../prismaClient';
 
 export interface DbResumeListItem {
     id: bigint;
@@ -9,23 +10,21 @@ export interface DbResumeListItem {
     updatedAt: Date;
 }
 
-type ChildListName = "educations" | "projects" | "skills" | "workExperiences" | "mediaLinks";
-
+type ChildListName = 'educations' | 'projects' | 'skills' | 'workExperiences' | 'mediaLinks';
 
 export const fullResumeInclude = {
-    educations: {include: {descriptionPoints: true}},
+    educations: { include: { descriptionPoints: true } },
     mediaLinks: true,
     projects: true,
     skills: true,
-    workExperiences: {include: {descriptionPoints: true}},
+    workExperiences: { include: { descriptionPoints: true } },
 } satisfies Prisma.resumesInclude;
 
 export type FullResume = Prisma.resumesGetPayload<{
     include: typeof fullResumeInclude;
-}>
+}>;
 
 export class ResumeRepository {
-
     async getAll(): Promise<DbResumeListItem[]> {
         return prisma.resumes.findMany({
             select: {
@@ -33,15 +32,15 @@ export class ResumeRepository {
                 resumeName: true,
                 isActive: true,
                 createdAt: true,
-                updatedAt: true
-            }
+                updatedAt: true,
+            },
         });
     }
 
     async getById(id: bigint): Promise<FullResume | null> {
         return prisma.resumes.findUnique({
             where: { id },
-            include: fullResumeInclude
+            include: fullResumeInclude,
         });
     }
 
@@ -50,14 +49,14 @@ export class ResumeRepository {
             data: {
                 resumeName,
                 isActive: false,
-                fullName: "",
-                email: "",
-                phone: "",
-                picture: "/images/avatar.jpg",
-                summary: "",
+                fullName: '',
+                email: '',
+                phone: '',
+                picture: '/images/avatar.jpg',
+                summary: '',
                 location: null,
                 intro: null,
-            }
+            },
         });
     }
 
@@ -72,15 +71,13 @@ export class ResumeRepository {
     async getActiveResume(): Promise<FullResume | null> {
         return prisma.resumes.findFirst({
             where: { isActive: true },
-            include: fullResumeInclude
+            include: fullResumeInclude,
         });
     }
 
     async clearChildList(listName: ChildListName, resumeId: bigint) {
         type DeletableModel = {
-            deleteMany: (args: {
-                where: {resumeId: bigint}
-            }) => Promise<Prisma.BatchPayload>;
+            deleteMany: (args: { where: { resumeId: bigint } }) => Promise<Prisma.BatchPayload>;
         };
 
         const modelMap: Record<ChildListName, DeletableModel> = {
@@ -88,12 +85,12 @@ export class ResumeRepository {
             projects: prisma.projects,
             skills: prisma.skills,
             workExperiences: prisma.workExperiences,
-            mediaLinks: prisma.mediaLinks
+            mediaLinks: prisma.mediaLinks,
         };
 
         const model = modelMap[listName];
 
-        return model.deleteMany({where: {resumeId}});
+        return model.deleteMany({ where: { resumeId } });
     }
 
     async createEducationItem(data: Prisma.educationsCreateInput) {
