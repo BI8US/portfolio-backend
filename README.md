@@ -70,8 +70,7 @@ PORT=8080
 JWT_SECRET=your_super_secret_key_change_me
 JWT_EXPIRES_IN=86400
 
-CORS_ALLOWED_ORIGINS=http://localhost:3000,https://asmirnov.pages.dev
-CORS_PREVIEW_DOMAIN=.asmirnov.pages.dev
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
 ### 3. Run with Docker (Recommended)
