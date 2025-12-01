@@ -5,7 +5,10 @@ import router from './routes/router';
 
 const app = express();
 
-const allowedOrigins = ['http://localhost:3000', 'https://asmirnov.pages.dev'];
+const allowedOriginsRaw = process.env.CORS_ALLOWED_ORIGINS || "";
+const allowedOrigins = allowedOriginsRaw.split(",").map(origin => origin.trim());
+
+const previewDomain = process.env.CORS_PREVIEW_DOMAIN || '.asmirnov.pages.dev';
 
 app.use(
     cors({
@@ -16,7 +19,7 @@ app.use(
                 return callback(null, true);
             }
 
-            if (origin.endsWith('.asmirnov.pages.dev')) {
+            if (origin.endsWith(previewDomain)) {
                 return callback(null, true);
             }
 

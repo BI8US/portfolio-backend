@@ -58,8 +58,9 @@ cd server-node
 ```
 
 ### 2. Environment Setup
-Create a `.env` file in the root directory based on the example below. Note: For local Docker development, `DATABASE_URL` must point to the service name `db`, not `localhost`.
-```
+Create a `.env` file in the root directory based on the example below.
+**Note:** For local Docker development, `DATABASE_URL` must point to the service name `db`, not `localhost`.
+```dotenv
 POSTGRES_USER=admin
 POSTGRES_PASSWORD=admin
 POSTGRES_DB=project_db
@@ -68,6 +69,9 @@ PORT=8080
 
 JWT_SECRET=your_super_secret_key_change_me
 JWT_EXPIRES_IN=86400
+
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://asmirnov.pages.dev
+CORS_PREVIEW_DOMAIN=.asmirnov.pages.dev
 ```
 
 ### 3. Run with Docker (Recommended)
