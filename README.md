@@ -53,8 +53,8 @@ The project is optimized for **Docker** development to avoid environment inconsi
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/YOUR_USERNAME/backend-repo-name.git](https://github.com/YOUR_USERNAME/backend-repo-name.git)
-cd backend-repo-name
+git clone git@github.com:BI8US/server-node.git
+cd server-node
 ```
 
 ### 2. Environment Setup
