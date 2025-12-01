@@ -8,7 +8,7 @@
 This repository contains the **Backend API** for my interactive portfolio and resume platform. It is a robust RESTful service built with Node.js, Express, and TypeScript, designed to handle authentication, data validation, and content management.
 
 🔗 **Base URL:** `https://resume-backend-yxcp.onrender.com/api`
-🔗 **Frontend Repository:** [https://github.com/BI8US/frontend](https://github.com/BI8US/frontend)
+🔗 **Frontend Repository:** [https://github.com/BI8US/portfolio-frontend](https://github.com/BI8US/portfolio-frontend)
 
 ---
 
@@ -53,7 +53,7 @@ The project is optimized for **Docker** development to avoid environment inconsi
 
 ### 1. Clone the Repository
 ```bash
-git clone git@github.com:BI8US/server-node.git
+git clone git@github.com:BI8US/portfolio-backend.git
 cd server-node
 ```
 
