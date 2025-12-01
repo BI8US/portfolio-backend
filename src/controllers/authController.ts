@@ -14,7 +14,7 @@ export class AuthController {
             const token = await authService.register(userName, email, password);
             return res.status(201).json({ token });
         } catch (err: any) {
-            console.error('❌ Register error:', err);
+            console.error('Register error:', err);
             return res.status(400).json({ error: err.message });
         }
     }

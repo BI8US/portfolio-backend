@@ -19,7 +19,7 @@ export class JobApplicationController {
             const applications = await jobApplicationService.getAll();
             res.json(applications);
         } catch (err) {
-            console.error('❌ Error fetching job applications:', err);
+            console.error('Error fetching job applications:', err);
             res.status(500).json({ error: 'Failed to fetch job applications' });
         }
     }
@@ -33,7 +33,7 @@ export class JobApplicationController {
             const application = await jobApplicationService.getById(id);
             res.json(application);
         } catch (err: any) {
-            console.error('❌ Error getting job application by id:', err);
+            console.error('Error getting job application by id:', err);
             res.status(404).json({ error: err.message });
         }
     }
@@ -72,7 +72,7 @@ export class JobApplicationController {
             await jobApplicationService.delete(id);
             res.status(204).send();
         } catch (err: any) {
-            console.error('❌ Error deleting job application:', err);
+            console.error('Error deleting job application:', err);
             res.status(404).json({ error: err.message });
         }
     }
