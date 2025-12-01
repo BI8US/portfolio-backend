@@ -1,4 +1,4 @@
-# Alexander Smirnov - Portfolio Backend API ⚙️
+# Alexander Smirnov - Portfolio Backend ⚙️
 
 [![Deploy Status](https://img.shields.io/badge/Deploy-Render-blue)](https://resume-backend-yxcp.onrender.com)
 [![Database](https://img.shields.io/badge/Database-Neon%20PostgreSQL-00E599)](https://neon.tech)
