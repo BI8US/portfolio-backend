@@ -17,25 +17,25 @@ const nullableString = z
     .transform((val) => val ?? null);
 
 const educationDescriptionPointSchema = z.object({
-    id: z.string().optional(),
-    educationEntityId: z.string(),
+    id: z.coerce.string().optional(),
+    educationEntityId: z.coerce.string(),
     descriptionPoint: z.string(),
 });
 
 const workExperienceDescriptionPointSchema = z.object({
-    id: z.string().optional(),
-    workExperienceEntityId: z.string(),
+    id: z.coerce.string().optional(),
+    workExperienceEntityId: z.coerce.string(),
     descriptionPoint: z.string(),
 });
 
 const mediaLinkSchema = z.object({
-    id: z.string().optional(),
+    id: z.coerce.string().optional(),
     name: z.string(),
     link: z.string(),
 });
 
 const projectSchema = z.object({
-    id: z.string().optional(),
+    id: z.coerce.string().optional(),
     title: z.string(),
     subTitle: z.string(),
     description: z.string(),
@@ -43,13 +43,13 @@ const projectSchema = z.object({
 });
 
 const skillSchema = z.object({
-    id: z.string().optional(),
+    id: z.coerce.string().optional(),
     name: z.string(),
     skillGroup: z.string(),
 });
 
 const educationSchema = z.object({
-    id: z.string().optional(),
+    id: z.coerce.string().optional(),
     school: z.string(),
     educationName: z.string(),
     startDate: z.string(),
@@ -58,7 +58,7 @@ const educationSchema = z.object({
 });
 
 const workExperienceSchema = z.object({
-    id: z.string().optional(),
+    id: z.coerce.string().optional(),
     company: z.string(),
     position: z.string(),
     startDate: z.string(),

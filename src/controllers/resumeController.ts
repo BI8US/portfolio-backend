@@ -196,7 +196,7 @@ export interface ResumeResponse {
 }
 
 export interface EducationItem {
-    id?: string | undefined;
+    id?: string;
     school: string;
     educationName: string;
     startDate: string;
@@ -205,19 +205,19 @@ export interface EducationItem {
 }
 
 export interface EducationDescriptionPoint {
-    id?: string | undefined;
+    id?: string;
     educationEntityId: string;
     descriptionPoint: string;
 }
 
 export interface MediaLinkItem {
-    id?: string | undefined;
+    id?: string;
     name: string;
     link: string;
 }
 
 export interface ProjectItem {
-    id?: string | undefined;
+    id?: string;
     title: string;
     subTitle: string;
     description: string;
@@ -225,13 +225,13 @@ export interface ProjectItem {
 }
 
 export interface SkillItem {
-    id?: string | undefined;
+    id?: string;
     name: string;
     skillGroup: string;
 }
 
 export interface WorkExperienceItem {
-    id?: string | undefined;
+    id?: string;
     company: string;
     position: string;
     startDate: string;
@@ -240,7 +240,7 @@ export interface WorkExperienceItem {
 }
 
 export interface WorkExperienceDescriptionPoint {
-    id?: string | undefined;
+    id?: string;
     workExperienceEntityId: string;
     descriptionPoint: string;
 }
