@@ -1,14 +1,12 @@
 import { resumes } from '@prisma/client';
 
 import type {
-    EducationDescriptionPoint,
     EducationItem,
     MediaLinkItem,
     ProjectItem,
     ResumeListItem,
     ResumeResponse,
     SkillItem,
-    WorkExperienceDescriptionPoint,
     WorkExperienceItem,
 } from '../controllers/resumeController';
 import { FullResume, ResumeRepository } from '../repositories/resumeRepository';
@@ -40,13 +38,7 @@ function mapResumeToResponse(resume: FullResume): ResumeResponse {
                 educationName: e.educationName || '',
                 startDate: e.startDate || '',
                 endDate: e.endDate || '',
-                descriptionPoints: (e.descriptionPoints || []).map(
-                    (dp): EducationDescriptionPoint => ({
-                        id: dp.id.toString(),
-                        educationEntityId: dp.educationEntityId.toString(),
-                        descriptionPoint: dp.descriptionPoint || '',
-                    }),
-                ),
+                description: e.description || '',
             }),
         ),
 
@@ -83,13 +75,7 @@ function mapResumeToResponse(resume: FullResume): ResumeResponse {
                 position: w.position || '',
                 startDate: w.startDate || '',
                 endDate: w.endDate || '',
-                descriptionPoints: (w.descriptionPoints || []).map(
-                    (dp): WorkExperienceDescriptionPoint => ({
-                        id: dp.id.toString(),
-                        workExperienceEntityId: dp.workExperienceEntityId.toString(),
-                        descriptionPoint: dp.descriptionPoint || '',
-                    }),
-                ),
+                description: w.description || '',
             }),
         ),
     } as ResumeResponse;
@@ -171,14 +157,9 @@ export class ResumeService {
         await repo.clearChildList('educations', resumeId);
 
         for (const item of items) {
-            const { id, descriptionPoints, ...rest } = item;
+            const { id, ...rest } = item;
             const data = {
                 ...rest,
-                descriptionPoints: {
-                    create: descriptionPoints.map((dp) => ({
-                        descriptionPoint: dp.descriptionPoint,
-                    })),
-                },
                 resume: {
                     connect: { id: resumeId },
                 },
@@ -191,14 +172,9 @@ export class ResumeService {
         await repo.clearChildList('workExperiences', resumeId);
 
         for (const item of items) {
-            const { id, descriptionPoints, ...rest } = item;
+            const { id, ...rest } = item;
             const data = {
                 ...rest,
-                descriptionPoints: {
-                    create: descriptionPoints.map((dp) => ({
-                        descriptionPoint: dp.descriptionPoint,
-                    })),
-                },
                 resume: {
                     connect: { id: resumeId },
                 },

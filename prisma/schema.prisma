@@ -40,45 +40,27 @@ model resumes {
 }
 
 model educations {
-  id                BigInt                       @id @default(autoincrement())
-  school            String?
-  educationName     String?                      @map("education_name")
-  startDate         String?                      @map("start_date")
-  endDate           String?                      @map("end_date")
-  resumeId          BigInt                       @map("resume_id")
-  resume            resumes                      @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  descriptionPoints educationDescriptionPoints[]
-}
-
-model educationDescriptionPoints {
-  id                BigInt     @id @default(autoincrement())
-  educationEntityId BigInt     @map("education_entity_id")
-  descriptionPoint  String?    @map("description_point")
-  education         educations @relation(fields: [educationEntityId], references: [id], onDelete: Cascade)
-
-  @@map("education_description_points")
+  id            BigInt  @id @default(autoincrement())
+  school        String?
+  educationName String? @map("education_name")
+  startDate     String? @map("start_date")
+  endDate       String? @map("end_date")
+  description   String?
+  resumeId      BigInt  @map("resume_id")
+  resume        resumes @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 }
 
 model workExperiences {
-  id                BigInt                            @id @default(autoincrement())
-  company           String?
-  position          String?
-  startDate         String?                           @map("start_date")
-  endDate           String?                           @map("end_date")
-  resumeId          BigInt                            @map("resume_id")
-  resume            resumes                           @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  descriptionPoints workExperienceDescriptionPoints[]
+  id          BigInt  @id @default(autoincrement())
+  company     String?
+  position    String?
+  startDate   String? @map("start_date")
+  endDate     String? @map("end_date")
+  description String?
+  resumeId    BigInt  @map("resume_id")
+  resume      resumes @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   @@map("work_experiences")
-}
-
-model workExperienceDescriptionPoints {
-  id                     BigInt          @id @default(autoincrement())
-  workExperienceEntityId BigInt          @map("work_experience_entity_id")
-  descriptionPoint       String?         @map("description_point")
-  workExperience         workExperiences @relation(fields: [workExperienceEntityId], references: [id], onDelete: Cascade)
-
-  @@map("work_experience_description_points")
 }
 
 model projects {

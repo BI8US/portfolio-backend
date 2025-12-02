@@ -201,13 +201,7 @@ export interface EducationItem {
     educationName: string;
     startDate: string;
     endDate: string;
-    descriptionPoints: EducationDescriptionPoint[];
-}
-
-export interface EducationDescriptionPoint {
-    id?: string;
-    educationEntityId: string;
-    descriptionPoint: string;
+    description: string;
 }
 
 export interface MediaLinkItem {
@@ -236,11 +230,5 @@ export interface WorkExperienceItem {
     position: string;
     startDate: string;
     endDate: string;
-    descriptionPoints: WorkExperienceDescriptionPoint[];
-}
-
-export interface WorkExperienceDescriptionPoint {
-    id?: string;
-    workExperienceEntityId: string;
-    descriptionPoint: string;
+    description: string;
 }

@@ -13,11 +13,11 @@ export interface DbResumeListItem {
 type ChildListName = 'educations' | 'projects' | 'skills' | 'workExperiences' | 'mediaLinks';
 
 export const fullResumeInclude = {
-    educations: { include: { descriptionPoints: true } },
+    educations: true,
     mediaLinks: true,
     projects: true,
     skills: true,
-    workExperiences: { include: { descriptionPoints: true } },
+    workExperiences: true,
 } satisfies Prisma.resumesInclude;
 
 export type FullResume = Prisma.resumesGetPayload<{
