@@ -16,18 +16,6 @@ const nullableString = z
     .nullish()
     .transform((val) => val ?? null);
 
-const educationDescriptionPointSchema = z.object({
-    id: z.coerce.string().optional(),
-    educationEntityId: z.coerce.string(),
-    descriptionPoint: z.string(),
-});
-
-const workExperienceDescriptionPointSchema = z.object({
-    id: z.coerce.string().optional(),
-    workExperienceEntityId: z.coerce.string(),
-    descriptionPoint: z.string(),
-});
-
 const mediaLinkSchema = z.object({
     id: z.coerce.string().optional(),
     name: z.string(),
@@ -54,7 +42,7 @@ const educationSchema = z.object({
     educationName: z.string(),
     startDate: z.string(),
     endDate: z.string(),
-    descriptionPoints: z.array(educationDescriptionPointSchema),
+    description: z.string(),
 });
 
 const workExperienceSchema = z.object({
@@ -63,7 +51,7 @@ const workExperienceSchema = z.object({
     position: z.string(),
     startDate: z.string(),
     endDate: z.string(),
-    descriptionPoints: z.array(workExperienceDescriptionPointSchema),
+    description: z.string(),
 });
 
 export const getOrDeleteResumeSchema = z.object({
