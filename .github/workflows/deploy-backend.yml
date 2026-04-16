@@ -22,11 +22,6 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd /root/portfolio-backend
-            
             git pull origin main
-            
             docker compose up -d --build
-            
-            docker exec project_app npx prisma migrate deploy
-            
             echo "✅ Backend successfully deployed and migrations applied!"

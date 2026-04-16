@@ -65,7 +65,7 @@ export class JobApplicationController {
 
     public update = async (
         req: Request<ApplicationParams, any, UpdateApplicationDto>,
-        res: Response<jobApplications | ErrorResponse>, // <-- Используем тип Prisma
+        res: Response<jobApplications | ErrorResponse>,
     ): Promise<void> => {
         try {
             const app = await jobApplicationService.update(parseApplicationId(req.params.id), req.body);
