@@ -1,100 +1,34 @@
 import { resumes } from '@prisma/client';
-
+import { FullResume, ResumeRepository } from '../repositories/resumeRepository';
 import type {
     EducationItem,
     MediaLinkItem,
     ProjectItem,
-    ResumeListItem,
-    ResumeResponse,
-    SkillItem,
+    SkillGroupItem,
     WorkExperienceItem,
-} from '../controllers/resumeController';
-import { FullResume, ResumeRepository } from '../repositories/resumeRepository';
-import { CreateResumeDto, UpdateHeaderDto } from '../schemas/resume.schema';
+    CreateResumeDto,
+    UpdateHeaderDto,
+    ResumeListQuery, ResumeListItem,
+} from '../types/resume';
 
 const repo = new ResumeRepository();
 
-function mapResumeToResponse(resume: FullResume): ResumeResponse {
-    return {
-        id: resume.id.toString(),
-        resumeName: resume.resumeName,
-        isActive: resume.isActive,
-
-        fullName: resume.fullName || '',
-        email: resume.email || '',
-        phone: resume.phone || '',
-        picture: resume.picture || '',
-        summary: resume.summary || '',
-        location: resume.location || '',
-        intro: resume.intro || '',
-
-        createdAt: resume.createdAt.toISOString(),
-        updatedAt: resume.updatedAt.toISOString(),
-
-        educations: (resume.educations || []).map(
-            (e): EducationItem => ({
-                id: e.id.toString(),
-                school: e.school || '',
-                educationName: e.educationName || '',
-                startDate: e.startDate || '',
-                endDate: e.endDate || '',
-                description: e.description || '',
-            }),
-        ),
-
-        mediaLinks: (resume.mediaLinks || []).map(
-            (m): MediaLinkItem => ({
-                id: m.id.toString(),
-                name: m.name || '',
-                link: m.link || '',
-            }),
-        ),
-
-        projects: (resume.projects || []).map(
-            (p): ProjectItem => ({
-                id: p.id.toString(),
-                title: p.title || '',
-                subTitle: p.subTitle || '',
-                description: p.description || '',
-                media: p.media || '',
-            }),
-        ),
-
-        skills: (resume.skills || []).map(
-            (s): SkillItem => ({
-                id: s.id.toString(),
-                name: s.name || '',
-                skillGroup: s.skillGroup || '',
-            }),
-        ),
-
-        workExperiences: (resume.workExperiences || []).map(
-            (w): WorkExperienceItem => ({
-                id: w.id.toString(),
-                company: w.company || '',
-                position: w.position || '',
-                startDate: w.startDate || '',
-                endDate: w.endDate || '',
-                description: w.description || '',
-            }),
-        ),
-    } as ResumeResponse;
-}
-
 function cleanHeaderData(data: Omit<UpdateHeaderDto, 'mediaLinks'>): Partial<resumes> {
-    (Object.keys(data) as Array<keyof typeof data>).forEach((key) => {
-        if (data[key] === undefined) {
-            delete data[key];
+    const cleaned = { ...data };
+    (Object.keys(cleaned) as Array<keyof typeof cleaned>).forEach((key) => {
+        if (cleaned[key] === undefined) {
+            delete cleaned[key];
         }
     });
-    return data as Partial<resumes>;
+    return cleaned as Partial<resumes>;
 }
 
 export class ResumeService {
-    async getAll(): Promise<ResumeListItem[]> {
-        const resumes = await repo.getAll();
+    async getAll(query?: ResumeListQuery): Promise<ResumeListItem[]> {
+        const resumes = await repo.getAll(query);
+
         return resumes.map((r) => ({
-            id: r.id.toString(),
+            id: r.id,
             resumeName: r.resumeName,
             isActive: r.isActive,
             createdAt: r.createdAt.toISOString(),
@@ -102,124 +36,62 @@ export class ResumeService {
         }));
     }
 
-    async getById(id: bigint): Promise<ResumeResponse> {
+    async getById(id: number): Promise<FullResume> {
         const resume = await repo.getById(id);
         if (!resume) throw new Error('Resume not found');
-        return mapResumeToResponse(resume);
+        return resume;
     }
 
-    async create(data: CreateResumeDto): Promise<ResumeResponse> {
+    async create(data: CreateResumeDto): Promise<FullResume> {
         const created = await repo.create(data.resumeName);
-        return mapResumeToResponse({
-            ...created,
-            educations: [],
-            mediaLinks: [],
-            projects: [],
-            skills: [],
-            workExperiences: [],
-        });
+        return this.getById(created.id);
     }
 
-    async updateHeader(id: bigint, data: UpdateHeaderDto): Promise<ResumeResponse> {
+    async updateHeader(id: number, data: UpdateHeaderDto): Promise<FullResume> {
         const { mediaLinks, ...headerData } = data;
         const cleanedHeaderData = cleanHeaderData(headerData);
+
         await repo.update(id, cleanedHeaderData);
+
         if (data.isActive) {
             const all = await repo.getAll();
             await Promise.all(
                 all
-                    .filter((r) => r.id.toString() !== id.toString())
+                    .filter((r) => r.id !== id)
                     .map((r) => repo.update(r.id, { isActive: false })),
             );
         }
+
         if (mediaLinks) {
-            await this.updateMediaLinks(id, mediaLinks);
+            await repo.syncMediaLinks(id, mediaLinks);
         }
 
         return this.getById(id);
     }
 
-    private async updateMediaLinks(resumeId: bigint, items: MediaLinkItem[]) {
-        await repo.clearChildList('mediaLinks', resumeId);
-        for (const item of items) {
-            const { id, ...rest } = item;
-            const data = {
-                ...rest,
-                resume: {
-                    connect: { id: resumeId },
-                },
-            };
-            await repo.createMediaLinkItem(data);
-        }
+    async updateEducations(resumeId: number, items: EducationItem[]): Promise<void> {
+        await repo.syncEducations(resumeId, items);
     }
 
-    async updateEducations(resumeId: bigint, items: EducationItem[]): Promise<void> {
-        await repo.clearChildList('educations', resumeId);
-
-        for (const item of items) {
-            const { id, ...rest } = item;
-            const data = {
-                ...rest,
-                resume: {
-                    connect: { id: resumeId },
-                },
-            };
-            await repo.createEducationItem(data);
-        }
+    async updateWorkExperiences(resumeId: number, items: WorkExperienceItem[]): Promise<void> {
+        await repo.syncWorkExperiences(resumeId, items);
     }
 
-    async updateWorkExperiences(resumeId: bigint, items: WorkExperienceItem[]): Promise<void> {
-        await repo.clearChildList('workExperiences', resumeId);
-
-        for (const item of items) {
-            const { id, ...rest } = item;
-            const data = {
-                ...rest,
-                resume: {
-                    connect: { id: resumeId },
-                },
-            };
-            await repo.createWorkExperienceItem(data);
-        }
+    async updateProjects(resumeId: number, items: ProjectItem[]): Promise<void> {
+        await repo.syncProjects(resumeId, items);
     }
 
-    async updateProjects(resumeId: bigint, items: ProjectItem[]): Promise<void> {
-        await repo.clearChildList('projects', resumeId);
-
-        for (const item of items) {
-            const { id, ...rest } = item;
-            const data = {
-                ...rest,
-                resume: {
-                    connect: { id: resumeId },
-                },
-            };
-            await repo.createProjectItem(data);
-        }
+    async updateSkillGroups(resumeId: number, items: SkillGroupItem[]): Promise<void> {
+        await repo.syncSkillGroups(resumeId, items);
     }
 
-    async updateSkills(resumeId: bigint, items: SkillItem[]): Promise<void> {
-        await repo.clearChildList('skills', resumeId);
-
-        for (const item of items) {
-            const { id, ...rest } = item;
-            const data = {
-                ...rest,
-                resume: {
-                    connect: { id: resumeId },
-                },
-            };
-            await repo.createSkillItem(data);
-        }
-    }
-
-    async delete(id: bigint): Promise<void> {
+    async delete(id: number): Promise<void> {
         await repo.delete(id);
     }
 
-    async getActiveResume(): Promise<ResumeResponse> {
+    async getActiveResume(): Promise<FullResume> {
         const active = await repo.getActiveResume();
         if (!active) throw new Error('No active resume found');
-        return mapResumeToResponse(active);
+        return active;
     }
 }

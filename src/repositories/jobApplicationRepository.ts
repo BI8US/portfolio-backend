@@ -1,9 +1,10 @@
 import { Prisma } from '@prisma/client';
 
 import prisma from '../prismaClient';
+import type { JobApplicationListQuery } from '../types/jobApplication';
 
 export class JobApplicationRepository {
-    async getAll() {
+    async getAll({ sortBy = 'createdAt', sortDirection = 'desc' }: JobApplicationListQuery = {}) {
         return prisma.jobApplications.findMany({
             select: {
                 id: true,
@@ -13,11 +14,11 @@ export class JobApplicationRepository {
                 createdAt: true,
                 updatedAt: true,
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { [sortBy]: sortDirection },
         });
     }
 
-    async getById(id: bigint) {
+    async getById(id: number) {
         return prisma.jobApplications.findUnique({ where: { id } });
     }
 
@@ -27,14 +28,14 @@ export class JobApplicationRepository {
         });
     }
 
-    async update(id: bigint, data: Prisma.jobApplicationsUpdateInput) {
+    async update(id: number, data: Prisma.jobApplicationsUpdateInput) {
         return prisma.jobApplications.update({
             where: { id },
             data: data,
         });
     }
 
-    async delete(id: bigint) {
+    async delete(id: number) {
         return prisma.jobApplications.delete({ where: { id } });
     }
 }

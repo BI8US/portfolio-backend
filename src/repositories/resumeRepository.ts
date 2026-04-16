@@ -1,23 +1,26 @@
 import type { Prisma, resumes } from '@prisma/client';
 
 import prisma from '../prismaClient';
-
-export interface DbResumeListItem {
-    id: bigint;
-    resumeName: string;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-}
-
-type ChildListName = 'educations' | 'projects' | 'skills' | 'workExperiences' | 'mediaLinks';
+import type {
+    ResumeListQuery,
+    EducationItem,
+    MediaLinkItem,
+    ProjectItem,
+    WorkExperienceItem,
+    SkillGroupItem
+} from '../types/resume';
 
 export const fullResumeInclude = {
-    educations: true,
-    mediaLinks: true,
-    projects: true,
-    skills: true,
-    workExperiences: true,
+    educations: { orderBy: { sortOrder: 'asc' } },
+    mediaLinks: { orderBy: { sortOrder: 'asc' } },
+    projects: { orderBy: { sortOrder: 'asc' } },
+    workExperiences: { orderBy: { sortOrder: 'asc' } },
+    skillGroups: {
+        orderBy: { sortOrder: 'asc' },
+        include: {
+            skills: { orderBy: { sortOrder: 'asc' } }
+        }
+    }
 } satisfies Prisma.resumesInclude;
 
 export type FullResume = Prisma.resumesGetPayload<{
@@ -25,7 +28,7 @@ export type FullResume = Prisma.resumesGetPayload<{
 }>;
 
 export class ResumeRepository {
-    async getAll(): Promise<DbResumeListItem[]> {
+    async getAll({ sortBy = 'updatedAt', sortDirection = 'desc' }: ResumeListQuery = {}) {
         return prisma.resumes.findMany({
             select: {
                 id: true,
@@ -34,10 +37,11 @@ export class ResumeRepository {
                 createdAt: true,
                 updatedAt: true,
             },
+            orderBy: { [sortBy]: sortDirection },
         });
     }
 
-    async getById(id: bigint): Promise<FullResume | null> {
+    async getById(id: number): Promise<FullResume | null> {
         return prisma.resumes.findUnique({
             where: { id },
             include: fullResumeInclude,
@@ -60,11 +64,11 @@ export class ResumeRepository {
         });
     }
 
-    async update(id: bigint, data: Partial<resumes>) {
+    async update(id: number, data: Partial<resumes>) {
         return prisma.resumes.update({ where: { id }, data });
     }
 
-    async delete(id: bigint) {
+    async delete(id: number) {
         return prisma.resumes.delete({ where: { id } });
     }
 
@@ -75,41 +79,94 @@ export class ResumeRepository {
         });
     }
 
-    async clearChildList(listName: ChildListName, resumeId: bigint) {
-        type DeletableModel = {
-            deleteMany: (args: { where: { resumeId: bigint } }) => Promise<Prisma.BatchPayload>;
-        };
 
-        const modelMap: Record<ChildListName, DeletableModel> = {
-            educations: prisma.educations,
-            projects: prisma.projects,
-            skills: prisma.skills,
-            workExperiences: prisma.workExperiences,
-            mediaLinks: prisma.mediaLinks,
-        };
-
-        const model = modelMap[listName];
-
-        return model.deleteMany({ where: { resumeId } });
+    async syncEducations(resumeId: number, items: EducationItem[]) {
+        const incomingIds = items.map(i => i.id).filter(id => id !== undefined) as number[];
+        await prisma.$transaction(async (tx) => {
+            await tx.educations.deleteMany({ where: { resumeId, id: { notIn: incomingIds } } });
+            for (const item of items) {
+                if (item.id) {
+                    await tx.educations.update({ where: { id: item.id }, data: { school: item.school, educationName: item.educationName, startDate: item.startDate, endDate: item.endDate, description: item.description, sortOrder: item.sortOrder } });
+                } else {
+                    await tx.educations.create({ data: { resumeId, school: item.school, educationName: item.educationName, startDate: item.startDate, endDate: item.endDate, description: item.description, sortOrder: item.sortOrder } });
+                }
+            }
+        });
     }
 
-    async createEducationItem(data: Prisma.educationsCreateInput) {
-        return prisma.educations.create({ data });
+    async syncProjects(resumeId: number, items: ProjectItem[]) {
+        const incomingIds = items.map(i => i.id).filter(id => id !== undefined) as number[];
+        await prisma.$transaction(async (tx) => {
+            await tx.projects.deleteMany({ where: { resumeId, id: { notIn: incomingIds } } });
+            for (const item of items) {
+                if (item.id) {
+                    await tx.projects.update({ where: { id: item.id }, data: { title: item.title, subTitle: item.subTitle, description: item.description, media: item.media, sortOrder: item.sortOrder } });
+                } else {
+                    await tx.projects.create({ data: { resumeId, title: item.title, subTitle: item.subTitle, description: item.description, media: item.media, sortOrder: item.sortOrder } });
+                }
+            }
+        });
     }
 
-    async createWorkExperienceItem(data: Prisma.workExperiencesCreateInput) {
-        return prisma.workExperiences.create({ data });
+    async syncWorkExperiences(resumeId: number, items: WorkExperienceItem[]) {
+        const incomingIds = items.map(i => i.id).filter(id => id !== undefined) as number[];
+        await prisma.$transaction(async (tx) => {
+            await tx.workExperiences.deleteMany({ where: { resumeId, id: { notIn: incomingIds } } });
+            for (const item of items) {
+                if (item.id) {
+                    await tx.workExperiences.update({ where: { id: item.id }, data: { company: item.company, position: item.position, startDate: item.startDate, endDate: item.endDate, description: item.description, sortOrder: item.sortOrder } });
+                } else {
+                    await tx.workExperiences.create({ data: { resumeId, company: item.company, position: item.position, startDate: item.startDate, endDate: item.endDate, description: item.description, sortOrder: item.sortOrder } });
+                }
+            }
+        });
     }
 
-    async createProjectItem(data: Prisma.projectsCreateInput) {
-        return prisma.projects.create({ data });
+    async syncMediaLinks(resumeId: number, items: MediaLinkItem[]) {
+        const incomingIds = items.map(i => i.id).filter(id => id !== undefined) as number[];
+        await prisma.$transaction(async (tx) => {
+            await tx.mediaLinks.deleteMany({ where: { resumeId, id: { notIn: incomingIds } } });
+            for (const item of items) {
+                if (item.id) {
+                    await tx.mediaLinks.update({ where: { id: item.id }, data: { name: item.name, link: item.link, sortOrder: item.sortOrder } });
+                } else {
+                    await tx.mediaLinks.create({ data: { resumeId, name: item.name, link: item.link, sortOrder: item.sortOrder } });
+                }
+            }
+        });
     }
 
-    async createSkillItem(data: Prisma.skillsCreateInput) {
-        return prisma.skills.create({ data });
-    }
+    async syncSkillGroups(resumeId: number, groups: SkillGroupItem[]) {
+        const incomingGroupIds = groups.map(g => g.id).filter(id => id !== undefined) as number[];
 
-    async createMediaLinkItem(data: Prisma.mediaLinksCreateInput) {
-        return prisma.mediaLinks.create({ data });
+        await prisma.$transaction(async (tx) => {
+            await tx.skillGroups.deleteMany({
+                where: { resumeId, id: { notIn: incomingGroupIds } }
+            });
+
+            for (const group of groups) {
+                let currentGroupId = group.id;
+
+                if (currentGroupId) {
+                    await tx.skillGroups.update({ where: { id: currentGroupId }, data: { name: group.name, sortOrder: group.sortOrder } });
+                } else {
+                    const newGroup = await tx.skillGroups.create({ data: { resumeId, name: group.name, sortOrder: group.sortOrder } });
+                    currentGroupId = newGroup.id;
+                }
+
+                const incomingSkillIds = group.skills.map(s => s.id).filter(id => id !== undefined) as number[];
+                await tx.skills.deleteMany({
+                    where: { skillGroupId: currentGroupId, id: { notIn: incomingSkillIds } }
+                });
+
+                for (const skill of group.skills) {
+                    if (skill.id) {
+                        await tx.skills.update({ where: { id: skill.id }, data: { name: skill.name, sortOrder: skill.sortOrder } });
+                    } else {
+                        await tx.skills.create({ data: { skillGroupId: currentGroupId, name: skill.name, sortOrder: skill.sortOrder } });
+                    }
+                }
+            }
+        });
     }
 }

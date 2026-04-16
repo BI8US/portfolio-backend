@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import { ParamsDictionary, Query } from 'express-serve-static-core';
 import jwt from 'jsonwebtoken';
 
+import type { AuthTokenPayload } from '../types/auth';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 export interface AuthRequest<P = ParamsDictionary, ReqBody = any, ReqQuery = Query> extends Request<
@@ -10,7 +12,7 @@ export interface AuthRequest<P = ParamsDictionary, ReqBody = any, ReqQuery = Que
     ReqBody,
     ReqQuery
 > {
-    user?: { id: bigint; userName: string; role: string };
+    user?: AuthTokenPayload;
 }
 
 export const authenticate = (req: AuthRequest<any>, res: Response, next: NextFunction) => {
@@ -26,7 +28,7 @@ export const authenticate = (req: AuthRequest<any>, res: Response, next: NextFun
     }
 
     try {
-        req.user = jwt.verify(token, JWT_SECRET) as { id: bigint; userName: string; role: string };
+        req.user = jwt.verify(token, JWT_SECRET) as AuthTokenPayload;
         next();
     } catch (err) {
         return res.status(401).json({ message: 'Invalid or expired token' });
