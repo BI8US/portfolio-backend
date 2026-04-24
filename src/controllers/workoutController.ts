@@ -11,6 +11,7 @@ const workoutService = new WorkoutService();
 
 export interface GenerateWorkoutDto {
     userRequest: string;
+    lang?: 'ru' | 'en';
 }
 
 export interface CompleteWorkoutDto {
@@ -24,6 +25,7 @@ export interface UpdateProfileDto {
     experienceLevel: string;
     goals: string;
     sportsBackground?: string | null;
+    language?: 'ru' | 'en';
 }
 
 export interface WorkoutChatDto {
@@ -104,7 +106,10 @@ export class WorkoutController {
                 return;
             }
 
-            const workout = await workoutService.createPlan(userId, userRequest);
+            const langRaw = req.body?.lang;
+            const lang: 'ru' | 'en' | undefined = langRaw === 'ru' || langRaw === 'en' ? langRaw : undefined;
+
+            const workout = await workoutService.createPlan(userId, userRequest, lang);
             res.status(201).json(workout);
         } catch (err: any) {
             console.error('Error creating workout plan:', err);

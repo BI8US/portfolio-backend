@@ -215,7 +215,12 @@ async function callOpenAiChatJson(
 }
 
 export class AiWorkoutService {
-    async createWorkoutPlan(profile: UserProfile, lastWorkouts: Workout[], userRequest: string): Promise<WorkoutPlan> {
+    async createWorkoutPlan(
+        profile: UserProfile,
+        lastWorkouts: Workout[],
+        userRequest: string,
+        lang: 'ru' | 'en',
+    ): Promise<WorkoutPlan> {
         const systemPrompt =
             'You are an elite AI fitness coach. Your job is to create a workout (strict JSON) based on the user profile, the user’s recent workouts (if any), and today’s request.\n\n' +
             'Profile: {profile}\n' +
@@ -224,7 +229,10 @@ export class AiWorkoutService {
             'YOUR DECISION LOGIC (pick one of two paths):\n' +
             "PATH A (Adaptation): If the user is simply continuing training (e.g. 'back day' or no major change), use the MOST RECENT workout as a strict template. Also consider the trend across the last 5 workouts: progress/regression, fatigue, and repeated muscle focus. Apply progression: if they generally hit the plan, increase weights/reps; if they underperformed, decrease.\n" +
             "PATH B (New program): If the request implies a change in environment, goal, or equipment (e.g. 'I’m at home', 'knee pain', 'want cardio'), create a COMPLETELY NEW program. Use recent workouts ONLY to infer general strength levels (working weights) and recovery, but do not copy the same exercises.\n\n" +
-            "Return ONLY valid JSON matching the WorkoutPlan schema. In 'aiMessage', briefly explain your choice (e.g. 'You exceeded the plan, +2.5kg on bench' OR 'You’re at home, built a bodyweight plan').";
+            "Return ONLY valid JSON matching the WorkoutPlan schema. In 'aiMessage', briefly explain your choice (e.g. 'You exceeded the plan, +2.5kg on bench' OR 'You’re at home, built a bodyweight plan').\n\n" +
+            `CRITICAL: You MUST generate the entire JSON response (titles, exercise names, and aiMessage) strictly in the following language: ${
+                lang === 'ru' ? 'Russian' : 'English'
+            }. Ignore the language of the user's input or history, and stick ONLY to the target language.`;
 
         const lastWorkoutsForPrompt = (lastWorkouts || []).map((w) => ({
             id: w.id,

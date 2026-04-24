@@ -11,6 +11,7 @@ export interface UpsertUserProfileDto {
     experienceLevel: string;
     goals: string;
     sportsBackground?: string | null;
+    language?: 'ru' | 'en';
 }
 
 export class WorkoutService {
@@ -33,6 +34,7 @@ export class WorkoutService {
             experienceLevel: 'BEGINNER',
             goals: 'GENERAL',
             sportsBackground: null,
+            language: 'ru',
         });
     }
 
@@ -47,6 +49,7 @@ export class WorkoutService {
                 experienceLevel: dto.experienceLevel,
                 goals: dto.goals,
                 sportsBackground: dto.sportsBackground ?? null,
+                language: dto.language ?? 'ru',
             });
         }
 
@@ -57,13 +60,16 @@ export class WorkoutService {
             experienceLevel: dto.experienceLevel,
             goals: dto.goals,
             sportsBackground: dto.sportsBackground ?? null,
+            language: dto.language ?? existing.language,
         });
     }
 
-    async createPlan(userId: number, userRequest: string): Promise<Workout> {
+    async createPlan(userId: number, userRequest: string, lang?: 'ru' | 'en'): Promise<Workout> {
         const profile = await this.getOrCreateProfile(userId);
+        const effectiveLang: 'ru' | 'en' =
+            lang === 'en' || lang === 'ru' ? lang : profile.language === 'en' ? 'en' : 'ru';
         const lastCompletedWorkouts = await this.repo.getLastCompletedWorkouts(userId, 5);
-        const plan = await this.ai.createWorkoutPlan(profile, lastCompletedWorkouts, userRequest);
+        const plan = await this.ai.createWorkoutPlan(profile, lastCompletedWorkouts, userRequest, effectiveLang);
 
         return await this.repo.createWorkout({
             user: { connect: { id: userId } },

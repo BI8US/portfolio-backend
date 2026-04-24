@@ -136,11 +136,14 @@ model UserProfile {
   experienceLevel  String
   goals            String
   sportsBackground String?  @db.Text
+  language         String   @default("ru")
   userId           Int      @unique
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
 }
 
 model Workout {
@@ -157,6 +160,8 @@ model Workout {
 
   user users @relation(fields: [userId], references: [id], onDelete: Cascade)
   chatMessages WorkoutChatMessage[]
+
+  @@map("workouts")
 }
 
 model WorkoutChatMessage {
@@ -172,4 +177,6 @@ model WorkoutChatMessage {
 
   @@index([workoutId, createdAt])
   @@index([userId, createdAt])
+
+  @@map("workout_chat_messages")
 }
