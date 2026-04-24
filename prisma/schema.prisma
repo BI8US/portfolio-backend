@@ -16,6 +16,10 @@ model users {
   role      String   @default("USER")
   isActive  Boolean  @map("is_active")
   createdAt DateTime @map("created_at") @db.Timestamp(6)
+
+  profile  UserProfile?
+  workouts Workout[]
+  workoutChatMessages WorkoutChatMessage[]
 }
 
 model resumes {
@@ -122,4 +126,50 @@ model jobApplications {
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamp(6)
 
   @@map("job_applications")
+}
+
+model UserProfile {
+  id               String   @id @default(uuid())
+  weight           Float
+  height           Float
+  age              Int
+  experienceLevel  String
+  goals            String
+  sportsBackground String?  @db.Text
+  userId           Int      @unique
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Workout {
+  id         String   @id @default(uuid())
+  date       DateTime @default(now())
+  title      String
+  status     String   @default("PLANNED")
+  plannedData Json
+  actualData  Json?
+  aiFeedback  String?  @db.Text
+  userId     Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user users @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatMessages WorkoutChatMessage[]
+}
+
+model WorkoutChatMessage {
+  id        String   @id @default(uuid())
+  workoutId String
+  userId    Int
+  role      String
+  text      String   @db.Text
+  createdAt DateTime @default(now())
+
+  workout Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  user    users   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workoutId, createdAt])
+  @@index([userId, createdAt])
 }
