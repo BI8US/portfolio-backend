@@ -1,14 +1,14 @@
 # Alexander Smirnov - Portfolio Backend ⚙️
 
-[![Deploy Status](https://img.shields.io/badge/Deploy-Render-blue)](https://resume-backend-yxcp.onrender.com)
-[![Database](https://img.shields.io/badge/Database-Neon%20PostgreSQL-00E599)](https://neon.tech)
+[![Hosting](https://img.shields.io/badge/Hosting-Hetzner-d80027)](https://www.hetzner.com/)
+[![Database](https://img.shields.io/badge/PostgreSQL-15-4169E1)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)](https://www.docker.com/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 
-This repository contains the **Backend API** for my interactive portfolio and resume platform. It is a robust RESTful service built with Node.js, Express, and TypeScript, designed to handle authentication, data validation, and content management.
+This repository contains the **Backend API** for my interactive portfolio and resume platform. It is a robust RESTful service built with Node.js, Express, and TypeScript, designed to handle authentication, data validation, content management, and an AI-assisted workout feature.
 
-🔗 **Base URL:** `https://resume-backend-yxcp.onrender.com/api`
-🔗 **Frontend Repository:** [https://github.com/BI8US/portfolio-frontend](https://github.com/BI8US/portfolio-frontend)
+🔗 **Live site:** [https://asmirnov.ee/](https://asmirnov.ee/)  
+🔗 **Frontend repository:** [https://github.com/BI8US/portfolio-frontend](https://github.com/BI8US/portfolio-frontend)
 
 ---
 
@@ -22,6 +22,12 @@ This repository contains the **Backend API** for my interactive portfolio and re
 - **Strict Validation:** All incoming requests are validated at runtime using **Zod** schemas, ensuring data integrity and type safety.
 - **Type Safety:** End-to-end type safety achieved through TypeScript and auto-generated Prisma Client types.
 
+### AI workout assistant
+- **Plan generation:** Authenticated users can create a planned workout from natural language (`userRequest`), the persisted **user profile** (age, weight, goals, injuries, etc.), and the **last five completed** workouts (planned vs actual JSON). The model returns a strict **WorkoutPlan** JSON (`title`, `focus`, `exercises`, `aiMessage`) via OpenAI Chat Completions with `json_schema` response format.
+- **Coach chat on a session:** For a specific workout id, the client can send messages; the server persists **user** and **AI** rows in `workout_chat_messages`, calls the model with **profile**, **current plan**, **recent completed workouts**, and **chat history**, then returns `reply`, optional `updatedPlan` (when the user asked for plan changes), and a server `timestamp`. If `updatedPlan` is present, `plannedData` and workout `title` are updated in the database.
+- **Graceful degradation:** Without `OPENAI_API_KEY`, plan creation returns a small mock plan and chat returns an explanatory reply with `updatedPlan: null`.
+- **HTTP:** Workout endpoints live under `/api/workouts` (JWT, roles `USER` or `ADMIN`); see [`src/routes/workoutRoutes.ts`](./src/routes/workoutRoutes.ts).
+
 ### Infrastructure
 - **Dockerized:** Fully containerized application using Docker and Docker Compose for consistent development and deployment environments.
 - **Database:** PostgreSQL (managed via Prisma ORM).
@@ -32,14 +38,15 @@ This repository contains the **Backend API** for my interactive portfolio and re
 ## 🛠️ Tech Stack
 
 - **Runtime:** Node.js v20 (Alpine Linux in Docker)
-- **Framework:** Express v5
-- **Language:** TypeScript v5
-- **ORM:** Prisma v6
+- **Framework:** Express 5
+- **Language:** TypeScript 5
+- **ORM:** Prisma 6
 - **Database:** PostgreSQL 15
 - **Validation:** Zod
 - **Auth:** jsonwebtoken, bcryptjs
-- **Tooling:** ESLint v8, Prettier
-- **Deployment:** Render (Web Service)
+- **AI:** OpenAI Chat Completions API (HTTPS `fetch`; optional third-party base URL via `OPENAI_API_URL`)
+- **Tooling:** ESLint 8, Prettier
+- **Deployment:** Self-hosted on Hetzner (Docker)
 
 ---
 
@@ -54,24 +61,17 @@ The project is optimized for **Docker** development to avoid environment inconsi
 ### 1. Clone the Repository
 ```bash
 git clone git@github.com:BI8US/portfolio-backend.git
-cd server-node
+cd portfolio-backend
 ```
 
 ### 2. Environment Setup
-Create a `.env` file in the root directory based on the example below.
-**Note:** For local Docker development, `DATABASE_URL` must point to the service name `db`, not `localhost`.
-```dotenv
-POSTGRES_USER=admin
-POSTGRES_PASSWORD=admin
-POSTGRES_DB=project_db
-DATABASE_URL="postgresql://admin:admin@db:5432/project_db?schema=public"
-PORT=8080
+Copy the committed template and edit values (especially secrets):
 
-JWT_SECRET=your_super_secret_key_change_me
-JWT_EXPIRES_IN=86400
-
-CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+```bash
+cp .env.example .env
 ```
+
+All variables are documented with comments in [`.env.example`](./.env.example). **Docker:** `DATABASE_URL` must use the hostname `db` (the Compose service name), not `localhost`. For `npx prisma migrate dev` or `npm run dev` against Postgres on your machine, temporarily switch `DATABASE_URL` to `localhost` as noted in `.env.example` and in the migrations section below.
 
 ### 3. Run with Docker (Recommended)
 This command builds the app container and starts the PostgreSQL database.
@@ -93,6 +93,7 @@ OR manually:
 ```bash
 docker compose down && docker compose up --build
 ```
+
 ## 📦 Available Scripts
 ### Docker Commands
 `npm run start` Starts the application and database using Docker Compose.
@@ -116,7 +117,7 @@ docker compose down && docker compose up --build
 `npm run fix:all` Runs formatting and linting fixes on the entire project.
 
 ## 🗄️ Database & Prisma
-The project uses Prisma ORM. The schema defines models for `User`, `Resume`, `Education`, `Experience`, `Skills`, etc.
+The project uses Prisma ORM. Besides resume-related models, the schema includes **`UserProfile`** (one-to-one with `User`, includes `language`), **`Workout`** (`plannedData` / `actualData` JSON, `aiFeedback`), **`WorkoutChatMessage`**, and **`JobApplication`**.
 
 ### Running Migrations
 In production (and Docker), migrations run automatically on startup. To create a new migration during development (requires local DB connection):
@@ -131,7 +132,7 @@ npx prisma migrate dev --name your_migration_name
 ## 💡 Author
 **Alexander Smirnov**
 
-**Portfolio:** [asmirnov.pages.dev](https://asmirnov.pages.dev)
+**Portfolio:** [asmirnov.ee](https://asmirnov.ee/)
 
 **LinkedIn:** [https://www.linkedin.com/in/alex-smrnv/](https://www.linkedin.com/in/alex-smrnv/)
 
