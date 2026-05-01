@@ -3,6 +3,7 @@ import { Prisma, UserProfile, Workout } from '@prisma/client';
 import { WorkoutRepository } from '../repositories/workoutRepository';
 import { AiWorkoutService } from './aiWorkoutService';
 import type { WorkoutPlan } from '../types/workout';
+import { reconcileUpdatedPlanWithDraft } from './workoutPlanReconcile';
 
 export interface UpsertUserProfileDto {
     weight: number;
@@ -102,6 +103,7 @@ export class WorkoutService {
         userId: number,
         workoutId: string,
         message: string,
+        draftRaw?: WorkoutPlan | unknown,
     ): Promise<{ reply: string; updatedPlan: WorkoutPlan | null; timestamp: string }> {
         const workout = await this.repo.getWorkoutById(workoutId);
         if (!workout || workout.userId !== userId) {
@@ -122,6 +124,10 @@ export class WorkoutService {
 
         const nowIso = new Date().toISOString();
         const currentPlan = workout.plannedData as unknown as WorkoutPlan;
+        const draft =
+            draftRaw && typeof draftRaw === 'object' && draftRaw !== null
+                ? (draftRaw as WorkoutPlan)
+                : null;
 
         const chatHistory = [
             ...existingHistory.map((m) => ({
@@ -134,7 +140,7 @@ export class WorkoutService {
 
         const { reply, updatedPlan } = await this.ai.chatAboutWorkout({
             profile,
-            currentPlan,
+            currentPlan: draft ?? currentPlan,
             lastCompletedWorkouts,
             chatHistory,
             userMessage: message,
@@ -148,15 +154,18 @@ export class WorkoutService {
             text: reply,
         });
 
-        if (updatedPlan) {
+        const reconciledUpdatedPlan =
+            updatedPlan && draft ? reconcileUpdatedPlanWithDraft(updatedPlan, draft) : updatedPlan;
+
+        if (reconciledUpdatedPlan) {
             await this.repo.updatePlannedData(
                 workoutId,
-                updatedPlan as unknown as Prisma.InputJsonValue,
-                updatedPlan.title,
+                reconciledUpdatedPlan as unknown as Prisma.InputJsonValue,
+                reconciledUpdatedPlan.title,
             );
         }
 
-        return { reply, updatedPlan, timestamp: aiMessage.createdAt.toISOString() };
+        return { reply, updatedPlan: reconciledUpdatedPlan, timestamp: aiMessage.createdAt.toISOString() };
     }
 
     async getWorkoutChatMessages(

@@ -30,6 +30,7 @@ export interface UpdateProfileDto {
 
 export interface WorkoutChatDto {
     message: string;
+    draft?: WorkoutPlan | unknown;
 }
 
 export class WorkoutController {
@@ -196,7 +197,8 @@ export class WorkoutController {
                 return;
             }
 
-            const result = await workoutService.chatAboutWorkout(userId, id, message);
+            const draft = req.body?.draft;
+            const result = await workoutService.chatAboutWorkout(userId, id, message, draft);
             res.json(result);
         } catch (err: any) {
             console.error('Error chatting about workout:', err);

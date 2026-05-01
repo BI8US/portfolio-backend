@@ -226,6 +226,9 @@ export class AiWorkoutService {
             'Profile: {profile}\n' +
             'Last 5 completed workouts (actual results, newest → oldest): {lastWorkouts}\n' +
             'Today request: {userRequest}\n\n' +
+            'COMMUNICATION STYLE (for aiMessage): sound like a supportive coach. Be practical and specific, not robotic. Keep it concise.\n' +
+            '- In aiMessage, include: (a) why you chose this plan (1 sentence), (b) 2-4 actionable tips (bullets), (c) 1 short follow-up question to tailor next time.\n' +
+            '- If any red flags (pain, dizziness, injury mention), advise to stop and seek professional help.\n\n' +
             'YOUR DECISION LOGIC (pick one of two paths):\n' +
             "PATH A (Adaptation): If the user is simply continuing training (e.g. 'back day' or no major change), use the MOST RECENT workout as a strict template. Also consider the trend across the last 5 workouts: progress/regression, fatigue, and repeated muscle focus. Apply progression: if they generally hit the plan, increase weights/reps; if they underperformed, decrease.\n" +
             "PATH B (New program): If the request implies a change in environment, goal, or equipment (e.g. 'I’m at home', 'knee pain', 'want cardio'), create a COMPLETELY NEW program. Use recent workouts ONLY to infer general strength levels (working weights) and recovery, but do not copy the same exercises.\n\n" +
@@ -282,7 +285,18 @@ export class AiWorkoutService {
         }));
 
         const systemPrompt =
-            'You are an elite fitness coach. The user is asking a question or requesting changes to their current workout.\n' +
+            'You are an elite fitness coach AND a friendly, talkative training partner. The user is asking a question or requesting changes to their current workout.\n' +
+            'TONE & BEHAVIOR RULES:\n' +
+            '- Be warm, encouraging, and engaged. Avoid сухие/канцелярские ответы.\n' +
+            '- Be proactive: suggest 2-3 concrete options or next actions when appropriate.\n' +
+            '- Ask 1-2 clarifying questions if it would materially improve safety or personalization.\n' +
+            '- Keep it readable: short paragraphs + bullets. No long essays.\n' +
+            '- Safety first: if the user mentions pain/injury/dizziness, recommend stopping and seeking medical advice.\n\n' +
+            'DECISION PATHS (pick EXACTLY ONE):\n' +
+            'PATH 1 — Coaching / Advice (NO plan change): user asks about technique, pacing, rest, substitutions, soreness, confidence, motivation, etc. Provide guidance + options. Set updatedPlan = null.\n' +
+            'PATH 2 — Clarify-first (ask questions BEFORE changing plan): user asks to change the plan but key details are missing (equipment, time available, pain/injury, fatigue, goals, exercise preferences). Ask 1-3 specific questions and offer 2 safe default options. Set updatedPlan = null.\n' +
+            'PATH 3 — Plan change (apply update): user request is clear enough to update the plan now. Update only what is necessary; keep structure stable. Return updatedPlan as a full WorkoutPlan object.\n' +
+            'CRITICAL: If you choose PATH 1 or PATH 2, updatedPlan MUST be null.\n\n' +
             `Current time (UTC ISO): ${nowIso}\n` +
             `User profile: ${buildProfileSummary(profile)}\n` +
             `Last 5 completed workouts (if any): ${JSON.stringify(lastWorkoutsBlock)}\n` +
@@ -291,8 +305,8 @@ export class AiWorkoutService {
             `User message: ${userMessage}\n` +
             'Return strict JSON with the following structure:\n' +
             '{\n' +
-            '  "reply": "Your detailed answer, advice, or explanation",\n' +
-            '  "updatedPlan": <Updated WorkoutPlan object IF the user requested changes. If no changes are needed, return null>\n' +
+            '  "reply": "Your engaged, coach-like answer. Include: (1) direct answer, (2) 2-5 practical tips/bullets, (3) 1-2 clarifying questions, (4) a short motivational close.",\n' +
+            '  "updatedPlan": <Updated WorkoutPlan object IF the user requested changes. If no changes are needed, return null. If you update, try to keep the same ids for exercises/sets when possible; only change what is necessary.>\n' +
             '}';
 
         const userPrompt = `User message: ${userMessage}. Return ONLY JSON.`;
