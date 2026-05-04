@@ -29,8 +29,12 @@ function buildExerciseIndexByName(exercises: ExerciseData[]) {
  * Strategy:
  * - Match exercises by id first; otherwise by normalized name (first unused candidate).
  * - Match sets by id first; otherwise by index.
- * - For matched sets: keep user's values (weight/reps/isCompleted) by default.
+ * - For matched sets: if the user already completed the set in the draft, freeze that set's
+ *   weight/reps (they already did it). Otherwise use the coach/updated prescription; still
+ *   merge isCompleted from the draft for incomplete sets.
  * - Preserve extra user-added sets that are beyond the updated plan length.
+ * - Do NOT re-append draft-only exercises: if the coach removed an exercise, it must stay removed.
+ * - Exercise title and id follow the updated plan; draft only supplies in-progress set data.
  */
 export function reconcileUpdatedPlanWithDraft(
     updatedPlan: WorkoutPlan,
@@ -68,11 +72,22 @@ export function reconcileUpdatedPlanWithDraft(
                 return updatedSet;
             }
 
+            if (draftSet.isCompleted) {
+                return {
+                    ...updatedSet,
+                    id: updatedSet.id,
+                    weight: draftSet.weight,
+                    reps: draftSet.reps,
+                    isCompleted: true,
+                };
+            }
+
+            // isCompleted: still from draft (not updatedSet) so AI cannot "check off" sets for the user.
             return {
                 ...updatedSet,
-                id: draftSet.id,
-                weight: draftSet.weight,
-                reps: draftSet.reps,
+                id: updatedSet.id,
+                weight: updatedSet.weight,
+                reps: updatedSet.reps,
                 isCompleted: draftSet.isCompleted,
             };
         });
@@ -85,21 +100,16 @@ export function reconcileUpdatedPlanWithDraft(
 
         return {
             ...updatedExercise,
-            id: draftExercise.id,
-            name: draftExercise.name,
+            // Keep coach/AI structure and naming; only merge in user set progress.
+            id: updatedExercise.id,
+            name: updatedExercise.name,
             sets: [...mergedSets, ...extraDraftSets],
         };
     });
 
-    const extraDraftExercises = draft.exercises.filter(
-        (e) =>
-            !updatedPlan.exercises.some((p) => p.id === e.id) &&
-            !mergedExercises.some((p) => p.id === e.id),
-    );
-
     return {
         ...updatedPlan,
-        exercises: [...mergedExercises, ...extraDraftExercises],
+        exercises: mergedExercises,
     };
 }
 
